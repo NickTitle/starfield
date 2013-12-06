@@ -1,43 +1,63 @@
 require 'gosu'
 
 class GameWindow < Gosu::Window
-
+  attr_accessor
   def initialize
     super 640,480, false
     self.caption = "Starfield"
     @black = Gosu::Color.new(0xFF000000)
-    @starArray = []
+    @star_array = []
     @ship = Ship.new(self)
+    @world_motion = [0,0.01];
 
     create_stars
   end
 
+  def create_stars
+    200.times do
+      @star = Star.new(self)
+      @star_array.push(@star)
+    end
+  end
+
   def update
-    @starArray.each do |star|
-      star.update_position
+
+    check_keyboard
+
+    @star_array.each do |star|
+      star.update_position(@world_motion)
     end
 
     @ship.update
   end
 
   def draw
-    @starArray.each do |s|
+    @star_array.each do |s|
       s.draw unless s.z > 1.75
     end
 
     @ship.draw
 
-    @starArray.each do |s|
+    @star_array.each do |s|
       s.draw unless s.z <= 1.75
     end
-    
   end
 
-  def create_stars
-    200.times do
-      @star = Star.new(self)
-      @starArray.push(@star)
+  def check_keyboard
+
+    if button_down? Gosu::KbLeft or button_down? Gosu::GpLeft then
+      @world_motion[0]+=0.01
     end
+    if button_down? Gosu::KbRight or button_down? Gosu::GpRight then
+      @world_motion[0]-=0.01
+    end
+    if button_down? Gosu::KbUp or button_down? Gosu::GpUp then
+      @world_motion[1]+=0.01
+    end
+    if button_down? Gosu::KbDown or button_down? Gosu::GpDown then
+      @world_motion[1]-=0.01
+    end
+
   end
 
 end
@@ -47,6 +67,7 @@ class Ship
   
   def initialize(window)
     @window = window
+    @vert = {'t' => [320,230], 'l' => [310, 265], 'r' =>[330, 265], 'b' =>[320,260]}
     @offset = [0,0]
     @offset_counter = [0,0]
     @particle_array = []
@@ -65,6 +86,7 @@ class Ship
 
   def update
     update_offset
+    update_rotation
     @particle_array.each do |p|
       p.update_position
     end
@@ -77,6 +99,11 @@ class Ship
     @offset_counter[0]+=0.005
     @offset_counter[0]=@offset_counter[0]%90
     @offset[0] = 150*Math.sin(@offset_counter[0]);
+    @offset=[0,0]
+  end
+
+  def update_rotation
+
   end
 
   def draw
@@ -86,17 +113,18 @@ class Ship
 
     oX = @offset[0]
     oY = @offset[1]
+    v = @vert
 
     @window.draw_triangle(
-      320+oX, 230+oY, @color,
-      310+oX, 265+oY, @color,
-      320+oX, 260+oY, @color,
+      v['t'][0]+oX, v['t'][1]+oY, @color,
+      v['l'][0]+oX, v['l'][1]+oY, @color,
+      v['b'][0]+oX, v['b'][1]+oY, @color,
       0
     )
     @window.draw_triangle(
-      320+oX, 230+oY, @color,
-      330+oX, 265+oY, @color,
-      320+oX, 260+oY, @color,
+      v['t'][0]+oX, v['t'][1]+oY, @color,
+      v['r'][0]+oX, v['r'][1]+oY, @color,
+      v['b'][0]+oX, v['b'][1]+oY, @color,
       0
     )
   end
@@ -112,9 +140,11 @@ class Star
     @size = rand(15)+1
   end
 
-  def update_position
-    @y += @z
-    @y -= 480 unless @y < 480
+  def update_position(world_motion)
+    @y += world_motion[1]*@z
+    @y = @y%480
+    @x += world_motion[0]*@z
+    @x = @x%640
   end
 
   def draw
@@ -136,7 +166,7 @@ class Star
 end
 
 class Particle
-  attr_accessor :x, :y, :xvel, :yvel, :cycles, :max_cycles, :color, :size
+  attr_accessor :x, :y, :xvel, :yvel, :cycles, :max_cycles, :y_scalar, :color, :size
 
   def initialize(window)
     @window = window
@@ -147,6 +177,7 @@ class Particle
     @size = rand(2)+1
     @cycles = 0
     @max_cycles = 1.0
+    @y_scalar = 0.2
     @color = Gosu::Color.new(0x00000000)
   end
 
@@ -168,15 +199,22 @@ class Particle
       @color = ColorPicker.color('red')
     end
 
-    unless(@cycles < @max_cycles)
-      @x = 320
-      @y = 260 
-      @xvel = (rand(40)-20)/10.0
-      @yvel = 10-@xvel.abs
-      @cycles = 0
-      @max_cycles = rand(30)+1.0
+    reset_particle unless @cycles < @max_cycles
+  end
+
+  def reset_particle
+    if @window.button_down? Gosu::KbUp or @window.button_down? Gosu::GpUp then
+      @y_scalar = 1.0
+    else
+      @y_scalar = [@y_scalar*0.7, 0.2].max
     end
 
+    @x = 320  
+    @y = 260 
+    @xvel = ((rand(40)-20)/10.0) * y_scalar
+    @yvel = (10-@xvel.abs/2.0) * y_scalar
+    @cycles = 0
+    @max_cycles = (rand(30)+1.0) * y_scalar
   end
 
   def draw(offset)
