@@ -19,16 +19,16 @@ class GameWindow < Gosu::Window
 		@shipOffsetYCounter = 0
 		@shipOffsetY = 0
 
-		createStars()
-		createParticles()
+		create_stars()
+		create_particles()
 	end
 
 	def update
 		@starArray.each do |star|
-			star.updatePosition
+			star.update_position
 		end
 		@particleArray.each do |particle|
-			particle.updatePosition
+			particle.update_position
 		end
 
 		@shipOffsetYCounter+=0.01
@@ -37,36 +37,37 @@ class GameWindow < Gosu::Window
 		@shipOffsetXCounter+=0.005
 		@shipOffsetXCounter=@shipOffsetXCounter%90
 		@shipOffsetX = 150*Math.sin(@shipOffsetXCounter);
+		
 	end
 
 	def draw
 		@starArray.each do |s|
-		drawStars(s.x, s.y, s.size)
+		draw_stars(s.x, s.y, s.size)
 		end
 
 		@particleArray.each do |p|
-		drawParticles(p.x+@shipOffsetX, p.y+@shipOffsetY, p.size)
+		draw_particles(p.x+@shipOffsetX, p.y+@shipOffsetY, p.size)
 		end
 
-		drawShip()
+		draw_ship()
 		
 	end
 
-	def createStars
+	def create_stars
 		200.times do
 			@star = Star.new(self)
 			@starArray.push(@star)
 		end
 	end
 
-	def createParticles
+	def create_particles
 		100.times do
 			@particle = Particle.new(self)
 			@particleArray.push(@particle)
 		end
 	end
 
-	def drawStars(x, y, size)
+	def draw_stars(x, y, size)
 
 		xmin = x-size/2
 		xmax = x+size/2
@@ -82,7 +83,7 @@ class GameWindow < Gosu::Window
 		)
 	end
 
-	def drawParticles(x, y, size)
+	def draw_particles(x, y, size)
 		xmin = x-size/2
 		xmax = x+size/2
 		ymin = y-size/2
@@ -97,7 +98,7 @@ class GameWindow < Gosu::Window
 		)
 	end
 
-	def drawShip()
+	def draw_ship
 		draw_triangle(
 			320+@shipOffsetX, 230+@shipOffsetY, @shipGrey,
 			310+@shipOffsetX, 265+@shipOffsetY, @shipGrey,
@@ -122,7 +123,7 @@ class Star
 		self.size = rand(15)+1
 	end
 
-	def updatePosition
+	def update_position
 		self.y += self.z
 		self.y -= 480 unless self.y < 480
 	end
@@ -138,7 +139,7 @@ class Particle
 		self.size = rand(2)+1
 	end
 
-	def updatePosition
+	def update_position
 		self.x += self.xvel
 		self.xvel = xvel*0.9
 		self.y += self.yvel
