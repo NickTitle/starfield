@@ -42,14 +42,18 @@ class GameWindow < Gosu::Window
 
   def draw
     @starArray.each do |s|
-    draw_stars(s.x, s.y, s.size)
+    draw_stars(s.x, s.y, s.size) unless s.z > 1.75
     end
 
     @particleArray.each do |p|
-    draw_particles(p.x+@shipOffsetX, p.y+@shipOffsetY, p.size)
+    draw_particles(p.x+@shipOffsetX, p.y+@shipOffsetY, p.size, p.color)
     end
 
     draw_ship()
+
+    @starArray.each do |s|
+    draw_stars(s.x, s.y, s.size) unless s.z <= 1.75
+    end
     
   end
 
@@ -83,17 +87,17 @@ class GameWindow < Gosu::Window
     )
   end
 
-  def draw_particles(x, y, size)
+  def draw_particles(x, y, size, color)
     xmin = x-size/2
     xmax = x+size/2
     ymin = y-size/2
     ymax = y+size/2
 
     draw_quad(
-      xmin, ymin, @red,
-      xmax, ymin, @red,
-      xmin, ymax, @orange,
-      xmax, ymax, @orange,
+      xmin, ymin, color,
+      xmax, ymin, color,
+      xmin, ymax, color,
+      xmax, ymax, color,
       0
     )
   end
@@ -119,7 +123,7 @@ class Star
   def initialize(window)
     self.x = rand(640)
     self.y = rand(480)
-    self.z = (rand(25)/10)+1
+    self.z = (rand(25)/10.0)+1
     self.size = rand(15)+1
   end
 
@@ -130,35 +134,71 @@ class Star
 end
 
 class Particle
-  attr_accessor :x, :y, :xvel, :yvel, :size
+  attr_accessor :x, :y, :xvel, :yvel, :cycles, :maxCycles, :color, :size
   def initialize(window)
     self.x = 320
     self.y = 260
     self.xvel = (rand(4)+1)-8
     self.yvel = rand(8)+1
     self.size = rand(2)+1
+    self.cycles = 0
+    self.maxCycles = rand(30)+1.0
+    self.color = ColorPicker.color('red')
   end
 
   def update_position
     self.x += self.xvel
-    self.xvel = xvel*0.9
+    self.xvel = xvel*0.7
     self.y += self.yvel
     self.yvel = yvel*0.8
+    self.cycles += 1
 
-    unless((self.xvel).abs>0.05 && (self.yvel).abs>0.1)
+    ratio = self.cycles/self.maxCycles
+    if ratio <= 0.2
+      self.color = ColorPicker.color('white')
+    elsif ratio > 0.2 && ratio <= 0.4
+      self.color = ColorPicker.color('yellow')
+    elsif ratio > 0.4 && ratio < 0.7
+      self.color = ColorPicker.color('orange')
+    else
+      self.color = ColorPicker.color('red')
+    end
+
+    unless(self.cycles < self.maxCycles)
       self.x = 320
       self.y = 260 
-      self.xvel = (rand(40)-20)/10
-      self.yvel = rand(7)+4
-      self.xvel *= 0.5 unless self.yvel < 3
+      self.xvel = (rand(40)-20)/10.0
+      self.yvel = 10-xvel.abs
+      self.cycles = 0
+      self.maxCycles = rand(30)+1.0
+      # self.xvel *= 0.8 unless self.yvel < 3
     end
 
   end
 end
 
-# class Spaceship
-#   attr_accessor :
-# end
+class ColorPicker
+  colorString = 0
+    def self.color(name)
+      case name
+        when "red"
+          colorString = 0xFFFF0000
+        when "orange"
+          colorString = 0xFFFF9900
+        when "yellow"
+          colorString = 0xFFFFFF00
+        when "green"
+          colorString = 0xFF00FF00
+        when "blue"
+          colorString = 0xFF0000FF
+        when "purple"
+          colorString = 0xFFFF00FF
+        when "white"
+          colorString = 0xFFFFFFFF
+        end
+      Gosu::Color.new(colorString) 
+    end
+end
 
 window = GameWindow.new
 window.show
