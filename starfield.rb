@@ -2,13 +2,14 @@ require 'gosu'
 
 class GameWindow < Gosu::Window
   attr_accessor :world_motion
+  attr_reader :ship
   def initialize
     super 640,480, false
     self.caption = "Starfield"
     @black = Gosu::Color.new(0xFF000000)
     @star_array = []
     @ship = Ship.new(self)
-    @world_motion = [0,0.01];
+    @world_motion = [0.0,0.01];
 
     create_stars
   end
@@ -44,7 +45,7 @@ class GameWindow < Gosu::Window
 end
 
 class Ship
-  attr_accessor :offset, :offset_counter, :angle
+  attr_accessor :offset, :offset_counter, :angle, :vert
   
   def initialize(window)
     @window = window
@@ -61,7 +62,7 @@ class Ship
 
   def create_particles
     100.times do
-      @particle = Particle.new(@window)
+      @particle = Particle.new(@window, self)
       @particle_array.push(@particle)
     end
   end
@@ -104,7 +105,7 @@ class Ship
   end
 
   def draw
-    @window.rotate(@angle, @vert['b'][0], @vert['b'][1]){
+    
 
       @particle_array.each do |p|
         p.draw(@offset)
@@ -114,7 +115,8 @@ class Ship
       oY = @offset[1]
       v = @vert
 
-      
+    @window.rotate(@angle, @vert['b'][0], @vert['b'][1]){
+
         @window.draw_triangle(
           v['t'][0]+oX, v['t'][1]+oY, @color,
           v['l'][0]+oX, v['l'][1]+oY, @color,
@@ -167,26 +169,27 @@ class Star
 end
 
 class Particle
-  attr_accessor :x, :y, :xvel, :yvel, :cycles, :max_cycles, :y_scalar, :color, :size
+  attr_accessor :x, :y, :xvel, :yvel, :cycles, :max_cycles, :y_scalar, :angle, :origin, :color, :size
 
-  def initialize(window)
+  def initialize(window, ship)
     @window = window
     @x = 320
     @y = 260
     @xvel = (rand(4)+1)-8
     @yvel = rand(8)+1
-    @size = rand(2)+1
+    @size = rand(3)+1
     @cycles = 0
     @max_cycles = 1.0
     @y_scalar = 0.2
     @color = Gosu::Color.new(0x00000000)
+    @ship = ship
   end
 
   def update_position
     @x += @xvel
-    @xvel = @xvel*0.7
+    @xvel = [@xvel*0.75, 0.1].max
     @y += @yvel
-    @yvel = @yvel*0.8
+    @yvel = [@yvel*0.8, 0.1].max
     @cycles += 1
 
     ratio = @cycles/@max_cycles
@@ -212,10 +215,11 @@ class Particle
 
     @x = 320  
     @y = 260 
-    @xvel = ((rand(40)-20)/10.0) * y_scalar
+    @xvel = (rand(41)/10.0-2.0) * y_scalar
     @yvel = (10-@xvel.abs/2.0) * y_scalar
     @cycles = 0
-    @max_cycles = (rand(30)+1.0) * y_scalar
+    @max_cycles = (rand(40)+1.0) * y_scalar
+    @angle = @ship.angle
   end
 
   def draw(offset)
@@ -224,13 +228,15 @@ class Particle
     ymin = @y-@size/2+offset[1]
     ymax = @y+@size/2+offset[1]
 
-    @window.draw_quad(
-      xmin, ymin, @color,
-      xmax, ymin, @color,
-      xmin, ymax, @color,
-      xmax, ymax, @color,
-      0
-    )
+    @window.rotate(@angle, @ship.vert['b'][0], @ship.vert['b'][1]){
+      @window.draw_quad(
+        xmin, ymin, @color,
+        xmax, ymin, @color,
+        xmin, ymax, @color,
+        xmax, ymax, @color,
+        0
+      )
+    }
   end
 end
 
