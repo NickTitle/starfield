@@ -1,7 +1,7 @@
 require 'gosu'
 
 class GameWindow < Gosu::Window
-  attr_accessor
+  attr_accessor :world_motion
   def initialize
     super 640,480, false
     self.caption = "Starfield"
@@ -22,8 +22,6 @@ class GameWindow < Gosu::Window
 
   def update
 
-    check_keyboard
-
     @star_array.each do |star|
       star.update_position(@world_motion)
     end
@@ -43,33 +41,17 @@ class GameWindow < Gosu::Window
     end
   end
 
-  def check_keyboard
-
-    if button_down? Gosu::KbLeft or button_down? Gosu::GpLeft then
-      @world_motion[0]+=0.01
-    end
-    if button_down? Gosu::KbRight or button_down? Gosu::GpRight then
-      @world_motion[0]-=0.01
-    end
-    if button_down? Gosu::KbUp or button_down? Gosu::GpUp then
-      @world_motion[1]+=0.01
-    end
-    if button_down? Gosu::KbDown or button_down? Gosu::GpDown then
-      @world_motion[1]-=0.01
-    end
-
-  end
-
 end
 
 class Ship
-  attr_accessor :offset, :offset_counter
+  attr_accessor :offset, :offset_counter, :angle
   
   def initialize(window)
     @window = window
     @vert = {'t' => [320,230], 'l' => [310, 265], 'r' =>[330, 265], 'b' =>[320,260]}
     @offset = [0,0]
     @offset_counter = [0,0]
+    @angle = 0
     @particle_array = []
     @color = ColorPicker.color('ship_grey')
 
@@ -86,10 +68,29 @@ class Ship
 
   def update
     update_offset
-    update_rotation
     @particle_array.each do |p|
       p.update_position
     end
+
+    check_keyboard
+
+  end
+
+  def check_keyboard
+    wM = @window.world_motion
+    if @window.button_down? Gosu::KbLeft or @window.button_down? Gosu::GpLeft then
+      @angle = (@angle-2)%360
+    end
+    if @window.button_down? Gosu::KbRight or @window.button_down? Gosu::GpRight then
+      @angle = (@angle+2)%360
+    end
+    if @window.button_down? Gosu::KbUp or @window.button_down? Gosu::GpUp then
+      # @window.world_motion[0]+= Math.cos(@angle)
+      radAngle = @angle*Math::PI/180
+      wM[1] = [ [4, wM[1]+0.01*Math.cos(radAngle)].min, -4].max
+      wM[0] = [ [4, wM[0]-0.01*Math.sin(radAngle)].min, -4].max
+    end
+
   end
 
   def update_offset
@@ -102,31 +103,31 @@ class Ship
     @offset=[0,0]
   end
 
-  def update_rotation
-
-  end
-
   def draw
-    @particle_array.each do |p|
-      p.draw(@offset)
-    end
+    @window.rotate(@angle, @vert['b'][0], @vert['b'][1]){
 
-    oX = @offset[0]
-    oY = @offset[1]
-    v = @vert
+      @particle_array.each do |p|
+        p.draw(@offset)
+      end
 
-    @window.draw_triangle(
-      v['t'][0]+oX, v['t'][1]+oY, @color,
-      v['l'][0]+oX, v['l'][1]+oY, @color,
-      v['b'][0]+oX, v['b'][1]+oY, @color,
-      0
-    )
-    @window.draw_triangle(
-      v['t'][0]+oX, v['t'][1]+oY, @color,
-      v['r'][0]+oX, v['r'][1]+oY, @color,
-      v['b'][0]+oX, v['b'][1]+oY, @color,
-      0
-    )
+      oX = @offset[0]
+      oY = @offset[1]
+      v = @vert
+
+      
+        @window.draw_triangle(
+          v['t'][0]+oX, v['t'][1]+oY, @color,
+          v['l'][0]+oX, v['l'][1]+oY, @color,
+          v['b'][0]+oX, v['b'][1]+oY, @color,
+          0
+        )
+        @window.draw_triangle(
+          v['t'][0]+oX, v['t'][1]+oY, @color,
+          v['r'][0]+oX, v['r'][1]+oY, @color,
+          v['b'][0]+oX, v['b'][1]+oY, @color,
+          0
+        )  
+    }
   end
 end
 
