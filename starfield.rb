@@ -1,10 +1,13 @@
 require 'gosu'
 
+WIDTH = 800
+HEIGHT = 600
+
 class GameWindow < Gosu::Window
   attr_accessor :world_motion
   attr_reader :ship
   def initialize
-    super 640,480, false
+    super WIDTH, HEIGHT, false
     self.caption = "Starfield"
     @black = Gosu::Color.new(0xFF000000)
     @star_array = []
@@ -22,7 +25,6 @@ class GameWindow < Gosu::Window
   end
 
   def update
-
     @star_array.each do |star|
       star.update_position(@world_motion)
     end
@@ -31,6 +33,7 @@ class GameWindow < Gosu::Window
   end
 
   def draw
+    self.scale(1.25, 1.25){
     @star_array.each do |s|
       s.draw unless s.z > 1.75
     end
@@ -40,6 +43,7 @@ class GameWindow < Gosu::Window
     @star_array.each do |s|
       s.draw unless s.z <= 1.75
     end
+  }
   end
 
 end
@@ -90,7 +94,14 @@ class Ship
       radAngle = @angle*Math::PI/180
       wM[1] = [ [4, wM[1]+0.01*Math.cos(radAngle)].min, -4].max
       wM[0] = [ [4, wM[0]-0.01*Math.sin(radAngle)].min, -4].max
+    else
+      if @window.world_motion[1]>0
+        @angle = @angle-0.1%360
+      else
+        @angle = @angle+0.1%360
+      end
     end
+      
 
   end
 
@@ -114,21 +125,48 @@ class Ship
       oX = @offset[0]
       oY = @offset[1]
       v = @vert
+      ship_grey = @color
+      white = ColorPicker.color('white')
+      dark_grey = ColorPicker.color('dark_grey')
+
 
     @window.rotate(@angle, @vert['b'][0], @vert['b'][1]){
-
+        #left border
         @window.draw_triangle(
-          v['t'][0]+oX, v['t'][1]+oY, @color,
-          v['l'][0]+oX, v['l'][1]+oY, @color,
-          v['b'][0]+oX, v['b'][1]+oY, @color,
+          v['t'][0]+oX, v['t'][1]-2+oY, white,
+          v['l'][0]-1+oX, v['l'][1]+1+oY, white,
+          v['b'][0]+oX, v['b'][1]+oY, white,
           0
         )
+        #right border
         @window.draw_triangle(
-          v['t'][0]+oX, v['t'][1]+oY, @color,
-          v['r'][0]+oX, v['r'][1]+oY, @color,
-          v['b'][0]+oX, v['b'][1]+oY, @color,
+          v['t'][0]+oX, v['t'][1]-2+oY, white,
+          v['r'][0]+1+oX, v['r'][1]+1+oY, white,
+          v['b'][0]+oX, v['b'][1]+oY, white,
           0
-        )  
+        )
+        #left body
+        @window.draw_triangle(
+          v['t'][0]+oX, v['t'][1]+oY, ship_grey,
+          v['l'][0]+oX, v['l'][1]+oY, ship_grey,
+          v['b'][0]+oX, v['b'][1]+oY, ship_grey,
+          0
+        )
+        #right body
+        @window.draw_triangle(
+          v['t'][0]+oX, v['t'][1]+oY, ship_grey,
+          v['r'][0]+oX, v['r'][1]+oY, ship_grey,
+          v['b'][0]+oX, v['b'][1]+oY, ship_grey,
+          0
+        )
+        #center cockpit
+        @window.draw_quad(
+          v['b'][0]-3+oX, v['b'][1]-6+oY, dark_grey,
+          v['b'][0]+3+oX, v['b'][1]-6+oY, dark_grey,
+          v['b'][0]+5+oX, v['b'][1]-2+oY, dark_grey,
+          v['b'][0]-5+oX, v['b'][1]-2+oY, dark_grey,
+          0
+        )
     }
   end
 end
@@ -140,14 +178,32 @@ class Star
     @x = rand(640)
     @y = rand(480)
     @z = (rand(25)/10.0)+1
-    @size = rand(15)+1
+    @size = ((rand(150)+1)/10.0)+0.5
   end
 
   def update_position(world_motion)
     @y += world_motion[1]*@z
-    @y = @y%480
+    if @y < 0 || @y > 480
+      reposition_star('x')
+      @y%=480
+    end
+    
     @x += world_motion[0]*@z
-    @x = @x%640
+    if @x < 0 || @x > 640
+      reposition_star('y')
+      @x%=640
+    end
+
+  end
+
+  def reposition_star(whichaxis)
+    case whichaxis
+      when 'x'
+        @x = rand(640)
+      when 'y'
+        @y = rand(480)
+    end
+    @size = ((rand(150)+1)/10.0)+0.5
   end
 
   def draw
@@ -156,7 +212,20 @@ class Star
     xmax = @x+@size/2
     ymin = @y-@size/2
     ymax = @y+@size/2
+    s = @size
     color = ColorPicker.color('white')
+
+    if @z < 1.1
+        if s < 9 && s > 7
+        color = ColorPicker.color('blue')
+        elsif s <=7 && s > 4
+          color = ColorPicker.color('green')
+        elsif s <=4 && s > 2
+          color = ColorPicker.color('orange')
+        elsif s <2
+          color = ColorPicker.color('red')
+        end
+    end
 
     @window.draw_quad(
       xmin, ymin, color,
@@ -262,6 +331,8 @@ class ColorPicker
           color_string = 0xFF000000
         when "ship_grey"
           color_string = 0xFF6E6E6E
+        when "dark_grey"  
+          color_string = 0xFF3E3E3E
         end
 
       Gosu::Color.new(color_string) 
