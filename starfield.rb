@@ -100,6 +100,8 @@ class Ship
       else
         @angle = @angle+0.1%360
       end
+        @window.world_motion[0] *= 0.999
+        @window.world_motion[1] *= 0.999
     end
       
 
