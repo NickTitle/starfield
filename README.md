@@ -6,4 +6,4 @@ starfield
 3. Watch the little spaceship fly around the screen
 4. :)
 
-![Image](http://i.imgur.com/76t1Ejy.png&raw=true)
+![Image](http://i.imgur.com/GPrzU2G.png&raw=true)
