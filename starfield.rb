@@ -2,57 +2,33 @@ require 'gosu'
 
 class GameWindow < Gosu::Window
 
-  @color = 'black'
-
   def initialize
     super 640,480, false
     self.caption = "Starfield"
     @black = Gosu::Color.new(0xFF000000)
-    @white = Gosu::Color.new(0xFFFFFFFF)
-    @red = Gosu::Color.new(0xFFFF0000)
-    @orange = Gosu::Color.new(0xFFFF9900)
-    @shipGrey = Gosu::Color.new(0xFF6E6E6E)
     @starArray = []
-    @particleArray = []
-    @shipOffsetXCounter = 0
-    @shipOffsetX = 0
-    @shipOffsetYCounter = 0
-    @shipOffsetY = 0
+    @ship = Ship.new(self)
 
-    create_stars()
-    create_particles()
+    create_stars
   end
 
   def update
     @starArray.each do |star|
       star.update_position
     end
-    @particleArray.each do |particle|
-      particle.update_position
-    end
 
-    @shipOffsetYCounter+=0.01
-    @shipOffsetYCounter=@shipOffsetYCounter%90
-    @shipOffsetY = 30*Math.sin(@shipOffsetYCounter);
-    @shipOffsetXCounter+=0.005
-    @shipOffsetXCounter=@shipOffsetXCounter%90
-    @shipOffsetX = 150*Math.sin(@shipOffsetXCounter);
-
+    @ship.update
   end
 
   def draw
     @starArray.each do |s|
-    draw_stars(s.x, s.y, s.size) unless s.z > 1.75
+      s.draw unless s.z > 1.75
     end
 
-    @particleArray.each do |p|
-    draw_particles(p.x+@shipOffsetX, p.y+@shipOffsetY, p.size, p.color)
-    end
-
-    draw_ship()
+    @ship.draw
 
     @starArray.each do |s|
-    draw_stars(s.x, s.y, s.size) unless s.z <= 1.75
+      s.draw unless s.z <= 1.75
     end
     
   end
@@ -64,55 +40,63 @@ class GameWindow < Gosu::Window
     end
   end
 
+end
+
+class Ship
+  attr_accessor :offset, :offset_counter
+  
+  def initialize(window)
+    @window = window
+    @offset = [0,0]
+    @offset_counter = [0,0]
+    @particle_array = []
+    @color = ColorPicker.color('ship_grey')
+
+    create_particles
+
+  end
+
   def create_particles
     100.times do
-      @particle = Particle.new(self)
-      @particleArray.push(@particle)
+      @particle = Particle.new(@window)
+      @particle_array.push(@particle)
     end
   end
 
-  def draw_stars(x, y, size)
-
-    xmin = x-size/2
-    xmax = x+size/2
-    ymin = y-size/2
-    ymax = y+size/2
-
-    draw_quad(
-      xmin, ymin, @white,
-      xmax, ymin, @white,
-      xmin, ymax, @white,
-      xmax, ymax, @white,
-      0
-    )
+  def update
+    update_offset
+    @particle_array.each do |p|
+      p.update_position
+    end
   end
 
-  def draw_particles(x, y, size, color)
-    xmin = x-size/2
-    xmax = x+size/2
-    ymin = y-size/2
-    ymax = y+size/2
-
-    draw_quad(
-      xmin, ymin, color,
-      xmax, ymin, color,
-      xmin, ymax, color,
-      xmax, ymax, color,
-      0
-    )
+  def update_offset
+    @offset_counter[1] += 0.01
+    @offset_counter[1]=@offset_counter[1]%90
+    @offset[1] = 30*Math.sin(@offset_counter[1]);
+    @offset_counter[0]+=0.005
+    @offset_counter[0]=@offset_counter[0]%90
+    @offset[0] = 150*Math.sin(@offset_counter[0]);
   end
 
-  def draw_ship
-    draw_triangle(
-      320+@shipOffsetX, 230+@shipOffsetY, @shipGrey,
-      310+@shipOffsetX, 265+@shipOffsetY, @shipGrey,
-      320+@shipOffsetX, 260+@shipOffsetY, @shipGrey,
+  def draw
+    @particle_array.each do |p|
+      p.draw(@offset)
+    end
+
+    oX = @offset[0]
+    oY = @offset[1]
+
+    @window.draw_triangle(
+      320+oX, 230+oY, @color,
+      310+oX, 265+oY, @color,
+      320+oX, 260+oY, @color,
       0
     )
-    draw_triangle(
-      320+@shipOffsetX, 230+@shipOffsetY, @shipGrey,
-      330+@shipOffsetX, 265+@shipOffsetY, @shipGrey,
-      320+@shipOffsetX, 260+@shipOffsetY, @shipGrey,
+    @window.draw_triangle(
+      320+oX, 230+oY, @color,
+      330+oX, 265+oY, @color,
+      320+oX, 260+oY, @color,
       0
     )
   end
@@ -121,82 +105,121 @@ end
 class Star
   attr_accessor :x, :y, :z, :size
   def initialize(window)
-    self.x = rand(640)
-    self.y = rand(480)
-    self.z = (rand(25)/10.0)+1
-    self.size = rand(15)+1
+    @window = window
+    @x = rand(640)
+    @y = rand(480)
+    @z = (rand(25)/10.0)+1
+    @size = rand(15)+1
   end
 
   def update_position
-    self.y += self.z
-    self.y -= 480 unless self.y < 480
+    @y += @z
+    @y -= 480 unless @y < 480
+  end
+
+  def draw
+
+    xmin = @x-@size/2
+    xmax = @x+@size/2
+    ymin = @y-@size/2
+    ymax = @y+@size/2
+    color = ColorPicker.color('white')
+
+    @window.draw_quad(
+      xmin, ymin, color,
+      xmax, ymin, color,
+      xmin, ymax, color,
+      xmax, ymax, color,
+      0
+    )
   end
 end
 
 class Particle
-  attr_accessor :x, :y, :xvel, :yvel, :cycles, :maxCycles, :color, :size
+  attr_accessor :x, :y, :xvel, :yvel, :cycles, :max_cycles, :color, :size
+
   def initialize(window)
-    self.x = 320
-    self.y = 260
-    self.xvel = (rand(4)+1)-8
-    self.yvel = rand(8)+1
-    self.size = rand(2)+1
-    self.cycles = 0
-    self.maxCycles = rand(30)+1.0
-    self.color = ColorPicker.color('red')
+    @window = window
+    @x = 320
+    @y = 260
+    @xvel = (rand(4)+1)-8
+    @yvel = rand(8)+1
+    @size = rand(2)+1
+    @cycles = 0
+    @max_cycles = 1.0
+    @color = Gosu::Color.new(0x00000000)
   end
 
   def update_position
-    self.x += self.xvel
-    self.xvel = xvel*0.7
-    self.y += self.yvel
-    self.yvel = yvel*0.8
-    self.cycles += 1
+    @x += @xvel
+    @xvel = @xvel*0.7
+    @y += @yvel
+    @yvel = @yvel*0.8
+    @cycles += 1
 
-    ratio = self.cycles/self.maxCycles
+    ratio = @cycles/@max_cycles
     if ratio <= 0.2
-      self.color = ColorPicker.color('white')
+      @color = ColorPicker.color('white')
     elsif ratio > 0.2 && ratio <= 0.4
-      self.color = ColorPicker.color('yellow')
+      @color = ColorPicker.color('yellow')
     elsif ratio > 0.4 && ratio < 0.7
-      self.color = ColorPicker.color('orange')
+      @color = ColorPicker.color('orange')
     else
-      self.color = ColorPicker.color('red')
+      @color = ColorPicker.color('red')
     end
 
-    unless(self.cycles < self.maxCycles)
-      self.x = 320
-      self.y = 260 
-      self.xvel = (rand(40)-20)/10.0
-      self.yvel = 10-xvel.abs
-      self.cycles = 0
-      self.maxCycles = rand(30)+1.0
-      # self.xvel *= 0.8 unless self.yvel < 3
+    unless(@cycles < @max_cycles)
+      @x = 320
+      @y = 260 
+      @xvel = (rand(40)-20)/10.0
+      @yvel = 10-@xvel.abs
+      @cycles = 0
+      @max_cycles = rand(30)+1.0
     end
 
+  end
+
+  def draw(offset)
+    xmin = @x-@size/2+offset[0]
+    xmax = @x+@size/2+offset[0]
+    ymin = @y-@size/2+offset[1]
+    ymax = @y+@size/2+offset[1]
+
+    @window.draw_quad(
+      xmin, ymin, @color,
+      xmax, ymin, @color,
+      xmin, ymax, @color,
+      xmax, ymax, @color,
+      0
+    )
   end
 end
 
 class ColorPicker
-  colorString = 0
+  color_string = 0
     def self.color(name)
       case name
         when "red"
-          colorString = 0xFFFF0000
+          color_string = 0xFFFF0000
         when "orange"
-          colorString = 0xFFFF9900
+          color_string = 0xFFFF9900
         when "yellow"
-          colorString = 0xFFFFFF00
+          color_string = 0xFFFFFF00
         when "green"
-          colorString = 0xFF00FF00
+          color_string = 0xFF00FF00
         when "blue"
-          colorString = 0xFF0000FF
+          color_string = 0xFF0000FF
         when "purple"
-          colorString = 0xFFFF00FF
+          color_string = 0xFFFF00FF
         when "white"
-          colorString = 0xFFFFFFFF
+          color_string = 0xFFFFFFFF
+        when "black"
+          color_string = 0xFF000000
+        when "ship_grey"
+          color_string = 0xFF6E6E6E
         end
-      Gosu::Color.new(colorString) 
+
+      Gosu::Color.new(color_string) 
     end
 end
 
