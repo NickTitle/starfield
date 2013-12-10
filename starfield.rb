@@ -15,11 +15,13 @@ class GameWindow < Gosu::Window
     self.caption = "Starfield"
     @black = Gosu::Color.new(0xFF000000)
     @star_array = []
+    @artifact_array = []
     @ship = Ship.new(self)
     @world_motion = [0.0,0.01];
     @minimap = Minimap.new(self, @ship)
     @radio = Radio.new(self)
     create_stars
+    create_artifacts
   end
 
   #create a set of stars for your ship to fly through
@@ -30,10 +32,21 @@ class GameWindow < Gosu::Window
     end
   end
 
+  def create_artifacts
+    16.times do
+      @artifact = Artifact.new(self)
+      @artifact_array.push(@artifact)
+      puts @artifact.location
+    end
+  end
+
   def update
     @star_array.each do |star|
       star.update_position(@world_motion)
     end
+    
+    update_artifacts_in_range
+
     @ship.update
     @minimap.update
     @radio.update
@@ -41,18 +54,38 @@ class GameWindow < Gosu::Window
     exit if self.button_down? Gosu::KbEscape
   end
 
+  def update_artifacts_in_range
+    @artifact_array.each do |artifact|
+      if (artifact.location[0]-@ship.world_position[0]).abs < WIDTH && (artifact.location[1]-@ship.world_position[1]).abs < HEIGHT
+        artifact.update
+        artifact.should_draw = true
+      else
+        artifact.should_draw = false
+      end
+    end
+  end
+
   def draw
     self.scale(1.25, 1.25){
+      
+      #bottom row of stars
       @star_array.each do |s|
         s.draw unless s.z > 1.75
       end
 
+      #flat layer, with artifacts and the ship
+      @artifact_array.each do |a|
+        a.draw unless !a.should_draw
+      end
+
       @ship.draw
 
+      #top layer of stars
       @star_array.each do |s|
         s.draw unless s.z <= 1.75
       end
 
+      #hud
       @minimap.draw
       @radio.draw
     }
@@ -77,7 +110,7 @@ class Ship
     @current_engine_volume = 0
     @world_position = [WORLD_SIZE/2, WORLD_SIZE/2]
     create_particles
-
+    @countdown = 60
   end
 
   #make the engine particles that fly behind the ship
@@ -94,6 +127,11 @@ class Ship
       p.update_position
     end
 
+    @countdown -=1
+    if @countdown <= 0
+      puts @world_position
+      @countdown = 60
+    end
     update_world_motion_relative_to_ship
     update_ship_position
 
@@ -252,6 +290,7 @@ class Star
     @y = rand(480)
     @z = (rand(25)/10.0)+1
     @size = ((rand(120)+1)/10.0)+0.5
+    @rot = rand(90)
     @color = ColorPicker.color("white")
     @color = ColorPicker.color('random') if @z < 1.1 && @size < 10
   end
@@ -279,7 +318,7 @@ class Star
     end
     @z = (rand(25)/10.0)+1
     @size = ((rand(150)+1)/10.0)+0.5
-    
+    @rot = rand(90)
     if @z < 1.1 && @size < 10
       @color = ColorPicker.color('random')
     else
@@ -295,16 +334,17 @@ class Star
     ymax = @y+@size/2
     s = @size
     color = @color
-
-    @window.draw_quad(
-      xmin, ymin, color,
-      xmax, ymin, color,
-      xmin, ymax, color,
-      xmax, ymax, color,
-      0
-    )
+    @window.rotate(@rot, @x, @y){
+      @window.draw_quad(
+        xmin, ymin, color,
+        xmax, ymin, color,
+        xmin, ymax, color,
+        xmax, ymax, color,
+        0
+      )  
+    }
+    
   end
-
 end
 
 class Particle
@@ -312,8 +352,8 @@ class Particle
 
   def initialize(window, ship)
     @window = window
-    @x = 320
-    @y = 260
+    @x = WIDTH/2
+    @y = HEIGHT/2
     @xvel = (rand(4)+1)-8
     @yvel = rand(8)+1
     @size = rand(3)+1
@@ -352,8 +392,8 @@ class Particle
       @y_scalar = [@y_scalar*0.7, 0.2].max
     end
 
-    @x = 320  
-    @y = 260 
+    @x = WIDTH/2  
+    @y = HEIGHT/2
     @xvel = ((rand(50)+1)/10.0-2.5) * y_scalar
     @yvel = rand(2)+8 * y_scalar
     @cycles = 0
@@ -509,13 +549,54 @@ class Radio
       0
     )
   end
-
 end
 
 class Artifact
-  def initialize
+  attr_accessor :location, :should_draw
+  def initialize(window)
+    @window = window
     @color = ColorPicker.color('random')
+    @rot = rand(90)
+    @location = [rand(WORLD_SIZE), rand(WORLD_SIZE)]
+    puts @location
+    @size_limits = [50+rand(50),150+rand(50)]
+    @size = @size_limits[1]-@size_limits[0]
+    @should_draw = false
+    @expand = false
   end
+
+  def update
+    case @expand
+      when true
+        if @size <= @size_limits[1]
+          @size += 1
+        else
+          @expand = false
+        end
+      when false
+        if @size >= @size_limits[0]
+          @size -= 1
+        else
+          @expand = true
+        end
+    end
+  end
+
+  def draw
+    l = @location.dup
+    l[0]+= (WIDTH - @window.ship.world_position[0])
+    l[1]+= (HEIGHT - @window.ship.world_position[1])
+    s = @size
+    c = @color
+    @window.draw_quad(
+      l[0]-s/2, l[1]-s/2, c,
+      l[0]-s/2, l[1]+s/2, c,
+      l[0]+s/2, l[1]+s/2, c,
+      l[0]+s/2, l[1]-s/2, c,
+      0
+    )
+  end
+
 end
 
 class ColorPicker
