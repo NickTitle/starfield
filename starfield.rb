@@ -2,10 +2,12 @@ require 'gosu'
 
 WIDTH = 800
 HEIGHT = 600
+WORLD_SIZE = 10000
 
 class GameWindow < Gosu::Window
   attr_accessor :world_motion
   attr_reader :ship
+
   def initialize
     super WIDTH, HEIGHT, false
     self.caption = "Starfield"
@@ -13,7 +15,7 @@ class GameWindow < Gosu::Window
     @star_array = []
     @ship = Ship.new(self)
     @world_motion = [0.0,0.01];
-
+    @minimap = Minimap.new(self, @ship)
     create_stars
   end
 
@@ -28,28 +30,30 @@ class GameWindow < Gosu::Window
     @star_array.each do |star|
       star.update_position(@world_motion)
     end
-
     @ship.update
+    @minimap.update
   end
 
   def draw
     self.scale(1.25, 1.25){
-    @star_array.each do |s|
-      s.draw unless s.z > 1.75
-    end
+      @star_array.each do |s|
+        s.draw unless s.z > 1.75
+      end
 
-    @ship.draw
+      @ship.draw
 
-    @star_array.each do |s|
-      s.draw unless s.z <= 1.75
-    end
-  }
+      @star_array.each do |s|
+        s.draw unless s.z <= 1.75
+      end
+
+      @minimap.draw
+    }
   end
 
 end
 
 class Ship
-  attr_accessor :offset, :offset_counter, :angle, :vert
+  attr_accessor :offset, :offset_counter, :angle, :vert, :engine_sound, :current_engine_volume, :world_position
   
   def initialize(window)
     @window = window
@@ -59,7 +63,10 @@ class Ship
     @angle = 0
     @particle_array = []
     @color = ColorPicker.color('ship_grey')
-
+    sound_obj = Gosu::Sample.new(window, "media/engine2.wav")
+    @engine_sound = sound_obj.play(0,1,true)
+    @current_engine_volume = 0
+    @world_position = [WORLD_SIZE/2, WORLD_SIZE/2]
     create_particles
 
   end
@@ -72,12 +79,14 @@ class Ship
   end
 
   def update
-    update_offset
+    # update_offset
     @particle_array.each do |p|
       p.update_position
     end
 
     check_keyboard
+
+    position_in_world
 
   end
 
@@ -94,17 +103,35 @@ class Ship
       radAngle = @angle*Math::PI/180
       wM[1] = [ [4, wM[1]+0.01*Math.cos(radAngle)].min, -4].max
       wM[0] = [ [4, wM[0]-0.01*Math.sin(radAngle)].min, -4].max
+
+      @engine_sound.volume=(1)
+      @current_engine_volume = 1
+
     else
+
+      if @current_engine_volume > 0
+        @current_engine_volume *= 0.95
+        @current_engine_volume = 0 unless @current_engine_volume > 0.05
+        @engine_sound.volume = @current_engine_volume
+      end
+
       if @window.world_motion[1]>0
         @angle = @angle-0.1%360
       else
         @angle = @angle+0.1%360
       end
-        @window.world_motion[0] *= 0.999
-        @window.world_motion[1] *= 0.999
+        @window.world_motion[0] *= 0.995
+        @window.world_motion[1] *= 0.995
     end
-      
+  end
 
+  def position_in_world
+    @world_position[0] -= @window.world_motion[0]
+    @world_position[1] -= @window.world_motion[1]
+
+      @world_position.each do |coord|
+        coord = coord%10000
+      end
   end
 
   def update_offset
@@ -114,11 +141,10 @@ class Ship
     @offset_counter[0]+=0.005
     @offset_counter[0]=@offset_counter[0]%90
     @offset[0] = 150*Math.sin(@offset_counter[0]);
-    @offset=[0,0]
+    # @offset=[0,0]
   end
 
   def draw
-    
 
       @particle_array.each do |p|
         p.draw(@offset)
@@ -180,7 +206,7 @@ class Star
     @x = rand(640)
     @y = rand(480)
     @z = (rand(25)/10.0)+1
-    @size = ((rand(150)+1)/10.0)+0.5
+    @size = ((rand(120)+1)/10.0)+0.5
   end
 
   def update_position(world_motion)
@@ -311,6 +337,65 @@ class Particle
   end
 end
 
+class Minimap
+  def initialize(window, ship)
+    @window = window
+    @ship = ship
+    @color = ColorPicker.color("map_background")
+    @size = 100
+    @offset = 5
+    @cycle_count = 0
+    @should_draw_ship = true
+  end
+
+  def update
+    if @cycle_count >= 60
+      @should_draw_ship = !@should_draw_ship 
+      @cycle_count = 0
+    else
+      @cycle_count += 1
+    end
+  end
+
+  def draw
+    o = @offset
+    s = @size
+    c = @color
+
+    @window.draw_quad(
+      o, o, c,
+      o+s, o, c,
+      o+s, o+s, c,
+      o, o+s, c,
+      0
+    )
+
+    if @should_draw_ship
+      c = ColorPicker.color("white")
+      shipLoc = get_ship_coords_for_map
+      
+      x = o+shipLoc[0]
+      y = o+shipLoc[1]
+
+      @window.draw_quad(
+        x, y, c,
+        x, y+3, c,
+        x+3, y+3, c,
+        x+3, y, c,
+        0
+      )
+    end
+
+  end
+
+  def get_ship_coords_for_map
+    x = @ship.world_position[0]/WORLD_SIZE * @size
+    y = @ship.world_position[1]/WORLD_SIZE * @size
+    return [x.round(2),y.round(2)]
+  end
+
+end
+
 class ColorPicker
   color_string = 0
     def self.color(name)
@@ -335,6 +420,8 @@ class ColorPicker
           color_string = 0xFF6E6E6E
         when "dark_grey"  
           color_string = 0xFF3E3E3E
+        when "map_background"
+          color_string = 0x33FFFFFF
         end
 
       Gosu::Color.new(color_string) 
