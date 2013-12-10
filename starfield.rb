@@ -4,10 +4,10 @@ WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
 WIDTH = 640
 HEIGHT = 480
-WORLD_SIZE = 25000
+WORLD_SIZE = 25000.0
 
 class GameWindow < Gosu::Window
-  attr_accessor :world_motion
+  attr_accessor :world_motion, :artifact_array, :radio
   attr_reader :ship
 
   def initialize
@@ -22,6 +22,10 @@ class GameWindow < Gosu::Window
     @radio = Radio.new(self)
     create_stars
     create_artifacts
+    # drums = Gosu::Sample.new(self, "media/drums.mp3")
+    # bass = Gosu::Sample.new(self, "media/bass.mp3")
+    # drums.play(1,1,true)
+    # bass.play(1,1,true)
   end
 
   #create a set of stars for your ship to fly through
@@ -36,7 +40,6 @@ class GameWindow < Gosu::Window
     16.times do
       @artifact = Artifact.new(self)
       @artifact_array.push(@artifact)
-      puts @artifact.location
     end
   end
 
@@ -75,7 +78,7 @@ class GameWindow < Gosu::Window
 
       #flat layer, with artifacts and the ship
       @artifact_array.each do |a|
-        a.draw unless !a.should_draw
+        a.draw unless !(a.should_draw && a.visible_on_map)
       end
 
       @ship.draw
@@ -129,7 +132,7 @@ class Ship
 
     @countdown -=1
     if @countdown <= 0
-      puts @world_position
+      # puts @world_position
       @countdown = 60
     end
     update_world_motion_relative_to_ship
@@ -154,7 +157,7 @@ class Ship
       
       adjust_engine_volume("up")
       damp_motion("active")
-
+      @window.radio.mute_static = true
     else
     
       adjust_engine_volume("down")
@@ -169,7 +172,6 @@ class Ship
       when "up"
         if @current_engine_volume < 1
           @current_engine_volume += 0.025
-          puts 
           @engine_sound.volume = @current_engine_volume
         end
       when "down"
@@ -352,8 +354,8 @@ class Particle
 
   def initialize(window, ship)
     @window = window
-    @x = WIDTH/2
-    @y = HEIGHT/2
+    @x = ship.vert['b'][0]
+    @y = ship.vert['b'][1]
     @xvel = (rand(4)+1)-8
     @yvel = rand(8)+1
     @size = rand(3)+1
@@ -392,8 +394,8 @@ class Particle
       @y_scalar = [@y_scalar*0.7, 0.2].max
     end
 
-    @x = WIDTH/2  
-    @y = HEIGHT/2
+    @x = @ship.vert['b'][0]
+    @y = @ship.vert['b'][1]
     @xvel = ((rand(50)+1)/10.0-2.5) * y_scalar
     @yvel = rand(2)+8 * y_scalar
     @cycles = 0
@@ -455,7 +457,7 @@ class Minimap
 
     if @should_draw_ship
       c = ColorPicker.color("white")
-      shipLoc = get_ship_coords_for_map
+      shipLoc = get_coords_for_position(@ship.world_position)
       
       x = o+shipLoc[0]
       y = o+shipLoc[1]
@@ -469,21 +471,40 @@ class Minimap
       )
     end
 
+    @window.artifact_array.each do |a|
+      if a.visible_on_map
+        c = a.color
+        loc = get_coords_for_position(a.location)
+        x = o+loc[0]
+        y = o+loc[1]
+
+        @window.draw_quad(
+          x, y, c,
+          x, y+3, c,
+          x+3, y+3, c,
+          x+3, y, c,
+          0
+        )
+      end
+    end
   end
 
-  def get_ship_coords_for_map
-    x = @ship.world_position[0]/WORLD_SIZE * @size
-    y = @ship.world_position[1]/WORLD_SIZE * @size
+  def get_coords_for_position(position)
+    x = position[0]/WORLD_SIZE * @size
+    y = position[1]/WORLD_SIZE * @size
     return [x.round(2),y.round(2)]
   end
 end
 
 class Radio
-
+  attr_accessor :mute_static
   def initialize(window)
+    
     @window = window
     @radio_offset = 0
-
+    sound_obj = Gosu::Sample.new(window, "media/static.wav")
+    @static = sound_obj.play(0,1,true)
+    @mute_static = true
     @border = [[10, HEIGHT-50], [300, HEIGHT-50], [300, HEIGHT-10], [10, HEIGHT-10]]
     @background = [[11, HEIGHT-49], [299, HEIGHT-49], [299, HEIGHT-11], [11, HEIGHT-11]]
     @face = [[15, HEIGHT-45], [294, HEIGHT-45], [294, HEIGHT-15], [15, HEIGHT-15]]
@@ -496,10 +517,28 @@ class Radio
 
   def update
     if @window.button_down? Gosu::KbComma
-      @radio_offset -= 1 unless @radio_offset < 1
+      @mute_static = false
+      @radio_offset -= 0.1 unless @radio_offset < 0.1
     end
     if @window.button_down? Gosu::KbPeriod
-      @radio_offset += 1 unless @radio_offset > 274
+      @mute_static = false
+      @radio_offset += 0.1 unless @radio_offset > 274.9
+    end
+
+    if @mute_static
+      @static.volume = 0
+    else
+      @window.artifact_array.each do |a|
+        if a.frequency.between?(@radio_offset-20, @radio_offset+20)
+          new_volume = (1-(@radio_offset-a.frequency).abs/20.0)
+          @static.volume = new_volume unless @mute_static
+          if (a.frequency-@radio_offset).abs<5
+            a.visible_on_map = true
+          else  
+            a.visible_on_map = false
+          end
+        end
+      end
     end
   end
 
@@ -552,16 +591,17 @@ class Radio
 end
 
 class Artifact
-  attr_accessor :location, :should_draw
+  attr_accessor :location, :frequency, :color, :should_draw, :visible_on_map
   def initialize(window)
     @window = window
     @color = ColorPicker.color('random')
     @rot = rand(90)
+    @frequency = 15+rand(245)
     @location = [rand(WORLD_SIZE), rand(WORLD_SIZE)]
-    puts @location
+    @visible_on_map = false
     @size_limits = [50+rand(50),150+rand(50)]
     @size = @size_limits[1]-@size_limits[0]
-    @should_draw = false
+    @should_draw = false...
     @expand = false
   end
 
@@ -588,13 +628,15 @@ class Artifact
     l[1]+= (HEIGHT - @window.ship.world_position[1])
     s = @size
     c = @color
-    @window.draw_quad(
-      l[0]-s/2, l[1]-s/2, c,
-      l[0]-s/2, l[1]+s/2, c,
-      l[0]+s/2, l[1]+s/2, c,
-      l[0]+s/2, l[1]-s/2, c,
-      0
-    )
+    @window.rotate(@rot, l[0],l[1]){
+      @window.draw_quad(
+        l[0]-s/2, l[1]-s/2, c,
+        l[0]-s/2, l[1]+s/2, c,
+        l[0]+s/2, l[1]+s/2, c,
+        l[0]+s/2, l[1]-s/2, c,
+        0
+      )
+    }
   end
 
 end
