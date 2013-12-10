@@ -1,26 +1,30 @@
 require 'gosu'
 
-WIDTH = 800
-HEIGHT = 600
-WORLD_SIZE = 10000
+WINDOW_WIDTH = 800
+WINDOW_HEIGHT = 600
+WIDTH = 640
+HEIGHT = 480
+WORLD_SIZE = 25000
 
 class GameWindow < Gosu::Window
   attr_accessor :world_motion
   attr_reader :ship
 
   def initialize
-    super WIDTH, HEIGHT, false
+    super WINDOW_WIDTH, WINDOW_HEIGHT, false
     self.caption = "Starfield"
     @black = Gosu::Color.new(0xFF000000)
     @star_array = []
     @ship = Ship.new(self)
     @world_motion = [0.0,0.01];
     @minimap = Minimap.new(self, @ship)
+    @radio = Radio.new(self)
     create_stars
   end
 
+  #create a set of stars for your ship to fly through
   def create_stars
-    200.times do
+    150.times do
       @star = Star.new(self)
       @star_array.push(@star)
     end
@@ -32,6 +36,9 @@ class GameWindow < Gosu::Window
     end
     @ship.update
     @minimap.update
+    @radio.update
+
+    exit if self.button_down? Gosu::KbEscape
   end
 
   def draw
@@ -47,6 +54,7 @@ class GameWindow < Gosu::Window
       end
 
       @minimap.draw
+      @radio.draw
     }
   end
 
@@ -57,6 +65,7 @@ class Ship
   
   def initialize(window)
     @window = window
+    #these are the vertices of the ship (top, left, right, bottom)
     @vert = {'t' => [320,230], 'l' => [310, 265], 'r' =>[330, 265], 'b' =>[320,260]}
     @offset = [0,0]
     @offset_counter = [0,0]
@@ -71,6 +80,7 @@ class Ship
 
   end
 
+  #make the engine particles that fly behind the ship
   def create_particles
     100.times do
       @particle = Particle.new(@window, self)
@@ -84,14 +94,15 @@ class Ship
       p.update_position
     end
 
-    check_keyboard
-
-    position_in_world
+    update_world_motion_relative_to_ship
+    update_ship_position
 
   end
 
-  def check_keyboard
+  def update_world_motion_relative_to_ship
+
     wM = @window.world_motion
+
     if @window.button_down? Gosu::KbLeft or @window.button_down? Gosu::GpLeft then
       @angle = (@angle-2)%360
     end
@@ -99,41 +110,76 @@ class Ship
       @angle = (@angle+2)%360
     end
     if @window.button_down? Gosu::KbUp or @window.button_down? Gosu::GpUp then
-      # @window.world_motion[0]+= Math.cos(@angle)
       radAngle = @angle*Math::PI/180
-      wM[1] = [ [4, wM[1]+0.01*Math.cos(radAngle)].min, -4].max
       wM[0] = [ [4, wM[0]-0.01*Math.sin(radAngle)].min, -4].max
-
-      @engine_sound.volume=(1)
-      @current_engine_volume = 1
+      wM[1] = [ [4, wM[1]+0.01*Math.cos(radAngle)].min, -4].max
+      
+      adjust_engine_volume("up")
+      damp_motion("active")
 
     else
-
-      if @current_engine_volume > 0
-        @current_engine_volume *= 0.95
-        @current_engine_volume = 0 unless @current_engine_volume > 0.05
-        @engine_sound.volume = @current_engine_volume
-      end
-
-      if @window.world_motion[1]>0
-        @angle = @angle-0.1%360
-      else
-        @angle = @angle+0.1%360
-      end
-        @window.world_motion[0] *= 0.995
-        @window.world_motion[1] *= 0.995
+    
+      adjust_engine_volume("down")
+      damp_motion("passive")
+    
     end
   end
 
-  def position_in_world
+  # pass "up" or "down" to adjust engine volume
+  def adjust_engine_volume(direction)
+    case direction
+      when "up"
+        if @current_engine_volume < 1
+          @current_engine_volume += 0.025
+          puts 
+          @engine_sound.volume = @current_engine_volume
+        end
+      when "down"
+        if @current_engine_volume > 0
+          @current_engine_volume *= 0.95
+          @current_engine_volume = 0 unless @current_engine_volume > 0.05
+          @engine_sound.volume = @current_engine_volume
+        end
+    end
+  end
+
+  # 
+  def update_ship_position
     @world_position[0] -= @window.world_motion[0]
     @world_position[1] -= @window.world_motion[1]
 
-      @world_position.each do |coord|
-        coord = coord%10000
+    @world_position[0] = @world_position[0]%WORLD_SIZE
+    @world_position[1] = @world_position[1]%WORLD_SIZE
+  end
+
+  #active for when buttons are down, passive for when you're just hanging out
+  def damp_motion(motion)
+    wM = @window.world_motion
+
+    case motion
+
+      when "active"
+
+        if @angle.between?(340,359) || @angle.between?(0,10) || @angle.between?(170, 190)
+          wM[0] *= 0.985
+        elsif @angle.between?(260,280) || @angle.between?(80,100)
+          wM[1] *= 0.985
+        end
+
+      when "passive"
+
+        wM[0] *= 0.995
+        wM[1] *= 0.995
+        if @window.world_motion[1] > 0
+            @angle = @angle - 0.1%360
+        else
+            @angle = @angle + 0.1%360
+        end
+
       end
   end
 
+  #unused currently, will move ship relative to the viewport
   def update_offset
     @offset_counter[1] += 0.01
     @offset_counter[1]=@offset_counter[1]%90
@@ -146,55 +192,54 @@ class Ship
 
   def draw
 
-      @particle_array.each do |p|
-        p.draw(@offset)
-      end
+    @particle_array.each do |p|
+      p.draw(@offset)
+    end
 
-      oX = @offset[0]
-      oY = @offset[1]
-      v = @vert
-      ship_grey = @color
-      white = ColorPicker.color('white')
-      dark_grey = ColorPicker.color('dark_grey')
-
+    oX = @offset[0]
+    oY = @offset[1]
+    v = @vert
+    ship_grey = @color
+    white = ColorPicker.color('white')
+    dark_grey = ColorPicker.color('dark_grey')
 
     @window.rotate(@angle, @vert['b'][0], @vert['b'][1]){
-        #left border
-        @window.draw_triangle(
-          v['t'][0]+oX, v['t'][1]-2+oY, white,
-          v['l'][0]-1+oX, v['l'][1]+1+oY, white,
-          v['b'][0]+oX, v['b'][1]+oY, white,
-          0
-        )
-        #right border
-        @window.draw_triangle(
-          v['t'][0]+oX, v['t'][1]-2+oY, white,
-          v['r'][0]+1+oX, v['r'][1]+1+oY, white,
-          v['b'][0]+oX, v['b'][1]+oY, white,
-          0
-        )
-        #left body
-        @window.draw_triangle(
-          v['t'][0]+oX, v['t'][1]+oY, ship_grey,
-          v['l'][0]+oX, v['l'][1]+oY, ship_grey,
-          v['b'][0]+oX, v['b'][1]+oY, ship_grey,
-          0
-        )
-        #right body
-        @window.draw_triangle(
-          v['t'][0]+oX, v['t'][1]+oY, ship_grey,
-          v['r'][0]+oX, v['r'][1]+oY, ship_grey,
-          v['b'][0]+oX, v['b'][1]+oY, ship_grey,
-          0
-        )
-        #center cockpit
-        @window.draw_quad(
-          v['b'][0]-3+oX, v['b'][1]-6+oY, dark_grey,
-          v['b'][0]+3+oX, v['b'][1]-6+oY, dark_grey,
-          v['b'][0]+5+oX, v['b'][1]-2+oY, dark_grey,
-          v['b'][0]-5+oX, v['b'][1]-2+oY, dark_grey,
-          0
-        )
+      #left border
+      @window.draw_triangle(
+        v['t'][0]+oX, v['t'][1]-2+oY, white,
+        v['l'][0]-1+oX, v['l'][1]+1+oY, white,
+        v['b'][0]+oX, v['b'][1]+oY, white,
+        0
+      )
+      #right border
+      @window.draw_triangle(
+        v['t'][0]+oX, v['t'][1]-2+oY, white,
+        v['r'][0]+1+oX, v['r'][1]+1+oY, white,
+        v['b'][0]+oX, v['b'][1]+oY, white,
+        0
+      )
+      #left body
+      @window.draw_triangle(
+        v['t'][0]+oX, v['t'][1]+oY, ship_grey,
+        v['l'][0]+oX, v['l'][1]+oY, ship_grey,
+        v['b'][0]+oX, v['b'][1]+oY, ship_grey,
+        0
+      )
+      #right body
+      @window.draw_triangle(
+        v['t'][0]+oX, v['t'][1]+oY, ship_grey,
+        v['r'][0]+oX, v['r'][1]+oY, ship_grey,
+        v['b'][0]+oX, v['b'][1]+oY, ship_grey,
+        0
+      )
+      #center cockpit
+      @window.draw_quad(
+        v['b'][0]-3+oX, v['b'][1]-6+oY, dark_grey,
+        v['b'][0]+3+oX, v['b'][1]-6+oY, dark_grey,
+        v['b'][0]+5+oX, v['b'][1]-2+oY, dark_grey,
+        v['b'][0]-5+oX, v['b'][1]-2+oY, dark_grey,
+        0
+      )
     }
   end
 end
@@ -207,6 +252,8 @@ class Star
     @y = rand(480)
     @z = (rand(25)/10.0)+1
     @size = ((rand(120)+1)/10.0)+0.5
+    @color = ColorPicker.color("white")
+    @color = ColorPicker.color('random') if @z < 1.1 && @size < 10
   end
 
   def update_position(world_motion)
@@ -221,7 +268,6 @@ class Star
       reposition_star('y')
       @x%=640
     end
-
   end
 
   def reposition_star(whichaxis)
@@ -231,7 +277,14 @@ class Star
       when 'y'
         @y = rand(480)
     end
+    @z = (rand(25)/10.0)+1
     @size = ((rand(150)+1)/10.0)+0.5
+    
+    if @z < 1.1 && @size < 10
+      @color = ColorPicker.color('random')
+    else
+      @color = ColorPicker.color('white')
+    end
   end
 
   def draw
@@ -241,19 +294,7 @@ class Star
     ymin = @y-@size/2
     ymax = @y+@size/2
     s = @size
-    color = ColorPicker.color('white')
-
-    if @z < 1.1
-        if s < 9 && s > 7
-        color = ColorPicker.color('blue')
-        elsif s <=7 && s > 4
-          color = ColorPicker.color('green')
-        elsif s <=4 && s > 2
-          color = ColorPicker.color('orange')
-        elsif s <2
-          color = ColorPicker.color('red')
-        end
-    end
+    color = @color
 
     @window.draw_quad(
       xmin, ymin, color,
@@ -263,6 +304,7 @@ class Star
       0
     )
   end
+
 end
 
 class Particle
@@ -284,7 +326,7 @@ class Particle
 
   def update_position
     @x += @xvel
-    @xvel = [@xvel*0.75, 0.1].max
+    @xvel = @xvel*0.7
     @y += @yvel
     @yvel = [@yvel*0.8, 0.1].max
     @cycles += 1
@@ -312,11 +354,12 @@ class Particle
 
     @x = 320  
     @y = 260 
-    @xvel = (rand(41)/10.0-2.0) * y_scalar
-    @yvel = (10-@xvel.abs/2.0) * y_scalar
+    @xvel = ((rand(50)+1)/10.0-2.5) * y_scalar
+    @yvel = rand(2)+8 * y_scalar
     @cycles = 0
     @max_cycles = (rand(40)+1.0) * y_scalar
     @angle = @ship.angle
+
   end
 
   def draw(offset)
@@ -393,7 +436,86 @@ class Minimap
     y = @ship.world_position[1]/WORLD_SIZE * @size
     return [x.round(2),y.round(2)]
   end
+end
 
+class Radio
+
+  def initialize(window)
+    @window = window
+    @radio_offset = 0
+
+    @border = [[10, HEIGHT-50], [300, HEIGHT-50], [300, HEIGHT-10], [10, HEIGHT-10]]
+    @background = [[11, HEIGHT-49], [299, HEIGHT-49], [299, HEIGHT-11], [11, HEIGHT-11]]
+    @face = [[15, HEIGHT-45], [294, HEIGHT-45], [294, HEIGHT-15], [15, HEIGHT-15]]
+    @dial_a = [[13, HEIGHT-25], [15, HEIGHT-48], [17, HEIGHT-25], [15, HEIGHT-12]]
+    @dial_b = [[14, HEIGHT-25], [15, HEIGHT-46], [16, HEIGHT-25], [15, HEIGHT-14]]
+    @black = ColorPicker.color('black')
+    @radio_grey = ColorPicker.color('radio_grey')
+    @white = ColorPicker.color('white')
+  end
+
+  def update
+    if @window.button_down? Gosu::KbComma
+      @radio_offset -= 1 unless @radio_offset < 1
+    end
+    if @window.button_down? Gosu::KbPeriod
+      @radio_offset += 1 unless @radio_offset > 274
+    end
+  end
+
+  def draw
+    #border
+    @window.draw_quad(
+      @border[0][0], @border[0][1], @white,
+      @border[1][0], @border[1][1], @white,
+      @border[2][0], @border[2][1], @white,
+      @border[3][0], @border[3][1], @white,
+      0
+    )
+    #background
+    @window.draw_quad(
+      @background[0][0], @background[0][1], @black,
+      @background[1][0], @background[1][1], @black,
+      @background[2][0], @background[2][1], @black,
+      @background[3][0], @background[3][1], @black,
+      0
+    )
+    #face
+    @window.draw_quad(
+      @face[0][0], @face[0][1], @radio_grey,
+      @face[1][0], @face[1][1], @radio_grey,
+      @face[2][0], @face[2][1], @radio_grey,
+      @face[3][0], @face[3][1], @radio_grey,
+      0
+    )
+    draw_dial
+  end
+
+  def draw_dial
+    #dial_a
+    @window.draw_quad(
+      @dial_a[0][0]+@radio_offset, @dial_a[0][1], @white,
+      @dial_a[1][0]+@radio_offset, @dial_a[1][1], @white,
+      @dial_a[2][0]+@radio_offset, @dial_a[2][1], @white,
+      @dial_a[3][0]+@radio_offset, @dial_a[3][1], @white,
+      0
+    )
+    #dial_b
+    @window.draw_quad(
+      @dial_b[0][0]+@radio_offset, @dial_b[0][1], @black,
+      @dial_b[1][0]+@radio_offset, @dial_b[1][1], @black,
+      @dial_b[2][0]+@radio_offset, @dial_b[2][1], @black,
+      @dial_b[3][0]+@radio_offset, @dial_b[3][1], @black,
+      0
+    )
+  end
+
+end
+
+class Artifact
+  def initialize
+    @color = ColorPicker.color('random')
+  end
 end
 
 class ColorPicker
@@ -418,13 +540,18 @@ class ColorPicker
           color_string = 0xFF000000
         when "ship_grey"
           color_string = 0xFF6E6E6E
+        when "radio_grey"
+          color_string = 0xFF8E8E8E
         when "dark_grey"  
           color_string = 0xFF3E3E3E
         when "map_background"
           color_string = 0x33FFFFFF
+        when "random"
+          color_string = ("0xFF"+rand(0xFFFFFF).to_s(16).upcase).to_i(16)
         end
 
       Gosu::Color.new(color_string) 
+
     end
 end
 
