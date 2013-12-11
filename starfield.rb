@@ -19,13 +19,9 @@ class GameWindow < Gosu::Window
     @ship = Ship.new(self)
     @world_motion = [0.0,0.01];
     @minimap = Minimap.new(self, @ship)
-    @radio = Radio.new(self)
+    @radio = Radio.new(self, @ship)
     create_stars
     create_artifacts
-    # drums = Gosu::Sample.new(self, "media/drums.mp3")
-    # bass = Gosu::Sample.new(self, "media/bass.mp3")
-    # drums.play(1,1,true)
-    # bass.play(1,1,true)
   end
 
   #create a set of stars for your ship to fly through
@@ -37,6 +33,7 @@ class GameWindow < Gosu::Window
   end
 
   def create_artifacts
+    # 16.times do
     16.times do
       @artifact = Artifact.new(self)
       @artifact_array.push(@artifact)
@@ -59,7 +56,7 @@ class GameWindow < Gosu::Window
 
   def update_artifacts_in_range
     @artifact_array.each do |artifact|
-      if (artifact.location[0]-@ship.world_position[0]).abs < WIDTH && (artifact.location[1]-@ship.world_position[1]).abs < HEIGHT
+      if (artifact.location[0]-@ship.world_position[0]).abs < 1.5*WIDTH && (artifact.location[1]-@ship.world_position[1]).abs < 1.5*HEIGHT
         artifact.update
         artifact.should_draw = true
       else
@@ -71,24 +68,24 @@ class GameWindow < Gosu::Window
   def draw
     self.scale(1.25, 1.25){
       
-      #bottom row of stars
+        #bottom row of stars
       @star_array.each do |s|
         s.draw unless s.z > 1.75
       end
 
-      #flat layer, with artifacts and the ship
+        #flat layer, with artifacts and the ship
       @artifact_array.each do |a|
         a.draw unless !(a.should_draw && a.visible_on_map)
       end
 
       @ship.draw
 
-      #top layer of stars
+        #top layer of stars
       @star_array.each do |s|
         s.draw unless s.z <= 1.75
       end
 
-      #hud
+        #hud
       @minimap.draw
       @radio.draw
     }
@@ -97,7 +94,7 @@ class GameWindow < Gosu::Window
 end
 
 class Ship
-  attr_accessor :offset, :offset_counter, :angle, :vert, :engine_sound, :current_engine_volume, :world_position
+  attr_accessor :angle, :vert, :engine_sound, :current_engine_volume, :world_position, :show_sonar, :sonar_array, :countdown_max
   
   def initialize(window)
     @window = window
@@ -107,13 +104,17 @@ class Ship
     @offset_counter = [0,0]
     @angle = 0
     @particle_array = []
+    @sonar_array = []
     @color = ColorPicker.color('ship_grey')
     sound_obj = Gosu::Sample.new(window, "media/engine2.wav")
     @engine_sound = sound_obj.play(0,1,true)
     @current_engine_volume = 0
     @world_position = [WORLD_SIZE/2, WORLD_SIZE/2]
     create_particles
-    @countdown = 60
+    create_sonar
+    @countdown = 0
+    @countdown_max = 60
+    @show_sonar = false
   end
 
   #make the engine particles that fly behind the ship
@@ -124,17 +125,34 @@ class Ship
     end
   end
 
+  def create_sonar
+    5.times do
+      @sonar = SonarBar.new(@window, self, 0)
+      @sonar_array.push(@sonar)
+    end
+  end
+
   def update
     # update_offset
     @particle_array.each do |p|
       p.update_position
     end
 
+    @sonar_array.each do |s|
+      s.update
+    end
+
     @countdown -=1
     if @countdown <= 0
-      # puts @world_position
-      @countdown = 60
+
+      @sonar_array.each do |s|
+        s.reset
+      end
+
+      @countdown = @countdown_max
+
     end
+
     update_world_motion_relative_to_ship
     update_ship_position
 
@@ -157,7 +175,6 @@ class Ship
       
       adjust_engine_volume("up")
       damp_motion("active")
-      @window.radio.mute_static = true
     else
     
       adjust_engine_volume("down")
@@ -236,6 +253,12 @@ class Ship
       p.draw(@offset)
     end
 
+    if @show_sonar
+      @sonar_array.each do |s|
+        s.draw
+      end
+    end
+# 
     oX = @offset[0]
     oY = @offset[1]
     v = @vert
@@ -428,7 +451,7 @@ class Minimap
     @ship = ship
     @color = ColorPicker.color("map_background")
     @size = 100
-    @offset = 5
+    @offset = 10
     @cycle_count = 0
     @should_draw_ship = true
   end
@@ -497,153 +520,396 @@ class Minimap
 end
 
 class Radio
-  attr_accessor :mute_static
-  def initialize(window)
+  def initialize(window, ship)
     
     @window = window
+    @ship = ship
     @radio_offset = 0
-    sound_obj = Gosu::Sample.new(window, "media/static.wav")
+    sound_obj = Gosu::Sample.new(window, "media/static.mp3")
     @static = sound_obj.play(0,1,true)
-    @mute_static = true
     @border = [[10, HEIGHT-50], [300, HEIGHT-50], [300, HEIGHT-10], [10, HEIGHT-10]]
     @background = [[11, HEIGHT-49], [299, HEIGHT-49], [299, HEIGHT-11], [11, HEIGHT-11]]
+    @reception_color = ColorPicker.color('white')
     @face = [[15, HEIGHT-45], [294, HEIGHT-45], [294, HEIGHT-15], [15, HEIGHT-15]]
     @dial_a = [[13, HEIGHT-25], [15, HEIGHT-48], [17, HEIGHT-25], [15, HEIGHT-12]]
     @dial_b = [[14, HEIGHT-25], [15, HEIGHT-46], [16, HEIGHT-25], [15, HEIGHT-14]]
     @black = ColorPicker.color('black')
     @radio_grey = ColorPicker.color('radio_grey')
     @white = ColorPicker.color('white')
+    @broadcast_range = 10
   end
 
   def update
     if @window.button_down? Gosu::KbComma
-      @mute_static = false
-      @radio_offset -= 0.1 unless @radio_offset < 0.1
+      @radio_offset -= 0.5 unless @radio_offset < 0.5
     end
     if @window.button_down? Gosu::KbPeriod
-      @mute_static = false
-      @radio_offset += 0.1 unless @radio_offset > 274.9
+      @radio_offset += 0.5 unless @radio_offset > 274.5
     end
 
-    if @mute_static
+    if @radio_offset == 0
       @static.volume = 0
+      return
+    end
+
+    artifacts_to_update = find_artifacts_in_broadcast_range(@broadcast_range)
+    if artifacts_to_update.length > 0
+      @ship.show_sonar = true
+      react_to_artifacts(artifacts_to_update)
     else
-      @window.artifact_array.each do |a|
-        if a.frequency.between?(@radio_offset-20, @radio_offset+20)
-          new_volume = (1-(@radio_offset-a.frequency).abs/20.0)
-          @static.volume = new_volume unless @mute_static
-          if (a.frequency-@radio_offset).abs<5
-            a.visible_on_map = true
-          else  
-            a.visible_on_map = false
+      @static.volume = 1
+      @ship.show_sonar = false
+    end
+
+  end
+
+  def find_artifacts_in_broadcast_range(range)
+    broadcasting_artifacts = []
+    if @radio_offset == 0
+      return []
+    end
+    @window.artifact_array.each do |a|
+      broadcasting_artifacts.push([a,distance(@ship.world_position,a.location)]) if a.frequency.between?(@radio_offset-range, @radio_offset+range)
+    end
+    broadcasting_artifacts.sort_by! { |x| x[1]}
+
+    broadcasting_artifacts
+  end
+
+  def react_to_artifacts(artifacts)
+
+      artifacts.each do |a|
+        aIQ = a[0]
+        new_volume = (aIQ.frequency-@radio_offset).abs/@broadcast_range
+        
+        # let closest artifact set static volume
+        scaled_volume = (255*(1-new_volume)).round
+        @reception_color = ColorPicker.color('full_reception', scaled_volume)
+        
+        if a == artifacts.first
+          @static.volume = new_volume
+          @ship.sonar_array.each do |s|
+            s.next_angle = angle(aIQ.location, @ship.world_position)
+            @ship.countdown_max = 180 * new_volume + 30
           end
         end
+        # set radio volume, scaled by order of array
+        aIQ.broadcast.volume = (1-new_volume) * 0.2**artifacts.index(a)
+
+        # show on map if close to correct radio frequency
+        if (aIQ.frequency-@radio_offset).abs<5
+          aIQ.visible_on_map = true
+        else
+          aIQ.visible_on_map = false
+        end
+      end
+  end
+
+  def draw
+    draw_behind_grill
+    draw_grill
+    draw_frame
+    draw_dial_base
+    draw_tuner
+    draw_knobs
+  end
+
+  def draw_behind_grill
+    bg = ColorPicker.color('white')
+    c = @reception_color
+    @window.draw_quad(
+      11, HEIGHT-68, bg,
+      139, HEIGHT-68, bg,
+      139, HEIGHT, bg,
+      11, HEIGHT, bg,
+      0
+    )
+    @window.draw_quad(
+      11, HEIGHT-68, bg,
+      17, HEIGHT-73, bg,
+      132, HEIGHT-73, bg,
+      139, HEIGHT-68, bg,
+      0
+    )
+  end
+
+  def draw_grill
+    t = 3  #thickness
+    x = 19
+    y = HEIGHT-65
+
+    c1 = ColorPicker.color("radio_grey")
+    c2 = ColorPicker.color("dark_grey")
+    20.times do |i|
+      12.times do |j|
+       c = c1
+       if i.between?(2,8) && j.between?(2,8)
+          c = c2
+        end
+        @window.draw_quad(
+          x+(t*2*i-t/2), y+(t*2*j-t/2), c,
+          x+(t*2*i-t/2), y+(t*2*j+t/2), c,
+          x+(t*2*i+t/2), y+(t*2*j+t/2), c,
+          x+(t*2*i+t/2), y+(t*2*j-t/2), c,
+          0
+        )
       end
     end
   end
 
-  def draw
-    #border
+  def draw_frame
+    t = 4
+    h = 75
+    w = 130
+    x = 10
+    y = HEIGHT - h
+    c = ColorPicker.color('frame_blue')
+
+      #left blue
     @window.draw_quad(
-      @border[0][0], @border[0][1], @white,
-      @border[1][0], @border[1][1], @white,
-      @border[2][0], @border[2][1], @white,
-      @border[3][0], @border[3][1], @white,
-      0
-    )
-    #background
+        x, y+2*t, c,
+        x+t, y+2*t, c,
+        x+t, y+h, c,
+        x, y+h, c,
+        0
+      )
+
+    #left angle
     @window.draw_quad(
-      @background[0][0], @background[0][1], @black,
-      @background[1][0], @background[1][1], @black,
-      @background[2][0], @background[2][1], @black,
-      @background[3][0], @background[3][1], @black,
-      0
-    )
-    #face
+        x, y+2*t, c,
+        x+2*t, y, c,
+        x+2*t, y+t, c,
+        x+t, y+2*t, c,
+        0
+      )
+
+      #top blue
     @window.draw_quad(
-      @face[0][0], @face[0][1], @radio_grey,
-      @face[1][0], @face[1][1], @radio_grey,
-      @face[2][0], @face[2][1], @radio_grey,
-      @face[3][0], @face[3][1], @radio_grey,
-      0
-    )
-    draw_dial
+        x+2*t, y, c,
+        x+2*t+(w-4*t), y, c,
+        x+2*t+(w-4*t), y+t, c,
+        x+2*t, y+t, c,
+        0
+      )
+
+      #left angle
+    @window.draw_quad(
+        x+2*t+(w-4*t), y, c,
+        x+w, y+2*t, c,
+        x+w-t, y+2*t, c,
+        x+2*t+(w-4*t), y+t, c,
+        0
+      )
+
+      #right blue
+    @window.draw_quad(
+        x+w-t, y+2*t, c,
+        x+w, y+2*t, c,
+        x+w, y+h, c,
+        x+w-t, y+h, c,
+        0
+      )
   end
 
-  def draw_dial
-    #dial_a
+  def draw_dial_base
+    c = ColorPicker.color('dark_grey')
+    c1 = ColorPicker.color('white')
+
+    x = 85
+    y = HEIGHT - 60
+    size = 40
+
+    draw_octagon(@window, x, y, size, c)
+
+    draw_octagon(@window, x+2, y+2, size-4, c1)
+    if @radio_offset > 0
+      on_off_color = @reception_color
+    else
+      on_off_color = ColorPicker.color('radio_grey')
+    end
+    draw_octagon(@window, x+2, y+2, size-4, on_off_color) 
+  end
+
+  def draw_tuner
+    x = 99
+    y = HEIGHT-47
+    s = 12.0
+    white = ColorPicker.color("white")
+    dark_grey = ColorPicker.color("dark_grey")
+    dial = ColorPicker.color("dial_orange")
+    @window.rotate((@radio_offset/275.0 * 180), x+s/2, y+s/2){
+      draw_octagon(@window,x-1,y-1,s+2, dark_grey)
+      draw_octagon(@window,x,y,s, white)    
+      draw_octagon(@window,x-8,y+4, s/4, dial)
+    }
     @window.draw_quad(
-      @dial_a[0][0]+@radio_offset, @dial_a[0][1], @white,
-      @dial_a[1][0]+@radio_offset, @dial_a[1][1], @white,
-      @dial_a[2][0]+@radio_offset, @dial_a[2][1], @white,
-      @dial_a[3][0]+@radio_offset, @dial_a[3][1], @white,
+      x+2, y+17, dark_grey,
+      x+11, y+17, dark_grey,
+      x+11, y+18, dark_grey,
+      x+2, y+18, dark_grey,
       0
     )
-    #dial_b
     @window.draw_quad(
-      @dial_b[0][0]+@radio_offset, @dial_b[0][1], @black,
-      @dial_b[1][0]+@radio_offset, @dial_b[1][1], @black,
-      @dial_b[2][0]+@radio_offset, @dial_b[2][1], @black,
-      @dial_b[3][0]+@radio_offset, @dial_b[3][1], @black,
+      x+5, y+17, dial,
+      x+8, y+17, dial,
+      x+8, y+16, dial,
+      x+5, y+16, dial,
       0
     )
+  end
+
+  def draw_knobs
+    x = 94
+    y = HEIGHT - 15
+    s = 8
+    black = ColorPicker.color('dark_grey')
+    white = ColorPicker.color('white')
+    dial = ColorPicker.color('dial_orange')
+    left_knob_rotate = (@radio_offset > 0) ? 45 : 0
+    @window.rotate(left_knob_rotate, x+s/2, y+s/2){
+      draw_octagon(@window,x-1,y-1,s+2, black)
+      draw_octagon(@window,x,y,s, white)    
+      draw_octagon(@window,x+1,y, 2, dial)
+    }
+    x = 109
+    @window.rotate(720*@radio_offset/275, x+s/2, y+s/2){
+      draw_octagon(@window,x-1,y-1,s+2, black)
+      draw_octagon(@window,x,y,s, white)    
+      draw_octagon(@window,x-1, y+3, 2, dial)
+    }
   end
 end
 
 class Artifact
-  attr_accessor :location, :frequency, :color, :should_draw, :visible_on_map
+  @@count = 0
+  attr_accessor :location, :frequency, :broadcast, :color, :should_draw, :visible_on_map
   def initialize(window)
+    @@count += 1
     @window = window
     @color = ColorPicker.color('random')
+    @tower_color = ColorPicker.color('random')
     @rot = rand(90)
-    @frequency = 15+rand(245)
+    # @rot = 0
+    @frequency = rand(275)
+    # @frequency = 2
+    mp3_pick = @@count%4+1
+    sound_obj = Gosu::Sample.new(window, "media/#{mp3_pick.to_s}.mp3")
+    @broadcast = sound_obj.play(0,1,true)
     @location = [rand(WORLD_SIZE), rand(WORLD_SIZE)]
+    # @location = [WORLD_SIZE/2, WORLD_SIZE/2]
     @visible_on_map = false
-    @size_limits = [50+rand(50),150+rand(50)]
+    @size_limits = [50+rand(25),150+rand(25)]
     @size = @size_limits[1]-@size_limits[0]
-    @should_draw = false...
+    @should_draw = false
     @expand = false
   end
 
   def update
-    case @expand
-      when true
-        if @size <= @size_limits[1]
-          @size += 1
-        else
-          @expand = false
-        end
-      when false
-        if @size >= @size_limits[0]
-          @size -= 1
-        else
-          @expand = true
-        end
-    end
+    # case @expand
+    #   when true
+    #     if @size <= @size_limits[1]
+    #       @size += 1
+    #     else
+    #       @expand = false
+    #     end
+    #   when false
+    #     if @size >= @size_limits[0]
+    #       @size -= 1
+    #     else
+    #       @expand = true
+    #     end
+    # end
+    @rot += 0.25
+    @rot%=360
   end
 
   def draw
     l = @location.dup
-    l[0]+= (WIDTH - @window.ship.world_position[0])
-    l[1]+= (HEIGHT - @window.ship.world_position[1])
+    l[0]+= (WIDTH/2 - @window.ship.world_position[0])
+    l[1]+= (HEIGHT/2 - @window.ship.world_position[1])
     s = @size
     c = @color
-    @window.rotate(@rot, l[0],l[1]){
+    
+    @window.rotate(@rot, l[0]+s/2,l[1]+s/2){
+      draw_octagon(@window,l[0], l[1],s, color)
+      draw_tower(l,s,c)
+    }
+    
+  end
+
+  def draw_tower(l,s,c)
+    c1 = @tower_color
+    @window.draw_triangle(
+      l[0]+s/4, l[1]+s/10, c1,
+      l[0]+s/4+s/10, l[1]+s/10, c1,
+      l[0]+s/2, l[1]-s*3/4, c1,
+      0
+    )
+    @window.draw_triangle(
+      s+l[0]-s/4, l[1]+s/10, c1,
+      s+l[0]-(s/4+s/10), l[1]+s/10, c1,
+      s+l[0]-s/2, l[1]-s*3/4, c1,
+      0
+    )
+    draw_octagon(@window, s+l[0]-s/2-s/8,l[1]-s*3/4-s/8, s/4, c)
+
+  end
+end
+
+class SonarBar
+  attr_accessor :next_angle
+  def initialize(window, ship, angle)
+    @window = window
+    @ship = ship
+    @speed = 5
+    @angle = angle
+    @next_angle = 0
+    @width = 2
+    @trans = 0
+    @center = @ship.vert['b']
+    @x = @center[0]
+    @y = @center[1]
+    
+  end
+
+  def reset 
+    @x = @center[0]
+    @y = @center[1]
+    @width = 2
+    @trans = 255
+    @speed = 5
+    @angle = @next_angle
+  end
+
+  def update
+    @width += 0.5
+    @trans -= 5
+    @speed *= 0.97
+    @y += @speed
+  end
+
+  def draw
+    return if @trans < 0.05
+    x = @x
+    y = @y
+    w = @width
+    c = ColorPicker.color('sonar', @trans.round)
+
+    @window.rotate(@angle+rand(20)-10+90, @center[0], @center[1]) {
       @window.draw_quad(
-        l[0]-s/2, l[1]-s/2, c,
-        l[0]-s/2, l[1]+s/2, c,
-        l[0]+s/2, l[1]+s/2, c,
-        l[0]+s/2, l[1]-s/2, c,
+        x-w/2, y, c,
+        x-w/2, y+3, c,
+        x+w/2, y+3, c,
+        x+w/2, y, c,
         0
       )
     }
   end
-
 end
 
 class ColorPicker
   color_string = 0
-    def self.color(name)
+    def self.color(name, trans = 255)
       case name
         when "red"
           color_string = 0xFFFF0000
@@ -669,13 +935,57 @@ class ColorPicker
           color_string = 0xFF3E3E3E
         when "map_background"
           color_string = 0x33FFFFFF
+        when "grill_grey"
+          color_string = 0xFFEBEBEB
+        when "frame_blue"
+          color_string = 0xFF3885D1
+        when "dial_orange"
+          color_string = 0xFFFF7735
         when "random"
           color_string = ("0xFF"+rand(0xFFFFFF).to_s(16).upcase).to_i(16)
+        when "full_reception"
+          c = trans.to_s(16).upcase
+          color_string = ("0x"+c+"FFFFCC").to_i(16)
+        when "sonar"
+          c = trans.to_s(16).upcase
+          color_string = ("0x"+c+"63ADD0").to_i(16)
         end
 
-      Gosu::Color.new(color_string) 
-
+      Gosu::Color.new(color_string)
     end
+end
+
+def distance(a,b)
+  ((b[0]-a[0])**2 + (b[1]-a[1])**2)**0.5
+end
+
+def angle(a,b)
+  Math.atan2(b[1]-a[1],b[0]-a[0]) * 180 / Math::PI
+end
+
+#draw octagon with top-left coords of x,y and diameter of size
+def draw_octagon(window, x, y, size, color)
+  window.draw_quad(
+      x, y+size/4, color,
+      x+size/4, y, color,
+      x+size*3/4, y, color,
+      x+size, y+size/4, color,
+      0
+    )
+  window.draw_quad(
+      x, y+size*3/4, color,
+      x+size/4, y+size, color,
+      x+size*3/4, y+size, color,
+      x+size, y+size*3/4, color,
+      0
+    )
+  window.draw_quad(
+      x, y+size/4, color,
+      x+size, y+size/4, color,
+      x+size, y+size*3/4, color,
+      x, y+size*3/4, color,
+      0
+    )
 end
 
 window = GameWindow.new
