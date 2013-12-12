@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 require 'gosu'
 
 WINDOW_WIDTH = 800
@@ -812,7 +813,7 @@ class Artifact
     @tower_color = ColorPicker.color('random')
     @dir = rand(1)
     @dir = -1 if @dir == 0
-    mp3_pick = @@count%4+1
+    mp3_pick = @@count%5+1
     sound_obj = Gosu::Sample.new(window, "media/#{mp3_pick.to_s}.mp3")
     @broadcast = sound_obj.play(0,1,true)
     found_sound_obj = Gosu::Sample.new(window, "media/found_planet.mp3")
@@ -852,7 +853,7 @@ class Artifact
     #       @expand = true
     #     end
     # end
-    
+
     # if distance(@location, @window.ship.world_position) < 100
     #   @found = true
     #   @found_sound.play(1,1,false) && @should_play_found = false if @should_play_found
@@ -1031,8 +1032,9 @@ class Writer
   def initialize(window)
     @window = window
     @font = Gosu::Font.new(window, "./media/04B03.TTF", 24)
-    @text = "Test test test test test test ..."
+    @text = "There's nobody in this one, either..."
     @scan = 1
+    @post_scan_timer_checks = 20
     @timer = 10
     @x = 150
     @y = HEIGHT - 25
@@ -1047,9 +1049,11 @@ class Writer
   def update
     @timer -=1
     if @timer <=0
-      @scan +=1
-      @scan %= @text.length
-      @timer = 3
+      @scan += 1
+      @scan = 0 if @scan > @text.length
+      if @scan == @text.length
+        @timer = 3*@post_scan_timer_checks
+      end
     end
   end
 
@@ -1064,7 +1068,6 @@ class Writer
     )
     @font.draw(@text[0, @scan], @x, @y, 0)
   end
-
 end
 
 class ColorPicker
