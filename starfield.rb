@@ -35,7 +35,7 @@ class GameWindow < Gosu::Window
   end
 
   def create_artifacts
-    16.times do
+    11.times do
     # 16.times do
       @artifact = Artifact.new(self)
       @artifact_array.push(@artifact)
@@ -229,8 +229,11 @@ class Ship
 
       when "passive"
 
-        wM[0] *= 0.995
-        wM[1] *= 0.995
+        wM[0] *= 0.995 if wM[0].abs>0.05
+        wM[1] *= 0.995 if wM[1].abs>0.05
+
+        # wM[0] = 0.01 && wM[1] = -0.01 if wM[0].abs<0.005 && wM[1].abs<0.005
+
         if @window.world_motion[1] > 0
             @angle = @angle - 0.1%360
         else
@@ -352,7 +355,7 @@ class Star
     @z = (rand(25)/10.0)+1
     @size = ((rand(150)+1)/10.0)+0.5
     @rot = rand(90)
-    if @z < 1.1 && @size < 10
+    if @z < 1.1 && @size < 12
       @color = ColorPicker.color('random')
     else
       @color = ColorPicker.color('white')
@@ -1038,7 +1041,7 @@ class Writer
     @font = Gosu::Font.new(window, "./media/04B03.TTF", 24)
     @text = "There's nobody in this one, either..."
     @scan = 1
-    @post_scan_timer_checks = 20
+    @post_scan_timer_checks = 30
     @timer = 10
     @x = 150
     @y = HEIGHT - 25
