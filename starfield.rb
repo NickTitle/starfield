@@ -320,6 +320,7 @@ class Star
     @z = (rand(25)/10.0)+1
     @size = ((rand(120)+1)/10.0)+0.5
     @rot = rand(90)
+    @dir = [-1,1][rand(2)]*rand(100)/500.0
     @color = ColorPicker.color("white")
     @color = ColorPicker.color('random') if @z < 1.1 && @size < 10
   end
@@ -336,6 +337,9 @@ class Star
       reposition_star('y')
       @x%=640
     end
+
+    @rot += @dir
+
   end
 
   def reposition_star(whichaxis)
