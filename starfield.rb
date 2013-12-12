@@ -20,6 +20,7 @@ class GameWindow < Gosu::Window
     @world_motion = [0.0,0.01];
     @minimap = Minimap.new(self, @ship)
     @radio = Radio.new(self, @ship)
+    @writer = Writer.new(self)
     create_stars
     create_artifacts
   end
@@ -50,7 +51,7 @@ class GameWindow < Gosu::Window
     @ship.update
     @minimap.update
     @radio.update
-
+    @writer.update
     exit if self.button_down? Gosu::KbEscape
   end
 
@@ -88,6 +89,7 @@ class GameWindow < Gosu::Window
         #hud
       @minimap.draw
       @radio.draw
+      @writer.draw
     }
   end
 
@@ -905,6 +907,38 @@ class SonarBar
       )
     }
   end
+end
+
+class Writer
+  attr_accessor
+  def initialize(window)
+    @window = window
+    @font = Gosu::Font.new(window, "./media/04B03.TTF", 20)
+    @text = "Test test test test test test ..."
+    @scan = 1
+    @timer = 10
+    @x = 150
+    @y = HEIGHT - 25
+  end
+
+  def set_text(text)
+    @text = text
+    @scan = 0
+  end
+
+  def update
+    @timer -=1
+    if @timer <=0
+      @scan +=1
+      @scan %= @text.length
+      @timer = 3
+    end
+  end
+
+  def draw
+    @font.draw(@text[0, @scan], @x, @y, 0)
+  end
+
 end
 
 class ColorPicker
