@@ -20,10 +20,12 @@ class GameWindow < Gosu::Window
     @ship = Ship.new(self)
     @world_motion = [0.0,0.01];
     @minimap = Minimap.new(self, @ship)
-    @radio = Radio.new(self, @ship)
     @writer = Writer.new(self)
     create_stars
     create_artifacts
+
+    @radio = Radio.new(self, @ship, @artifact_array)
+
   end
 
   #create a set of stars for your ship to fly through
@@ -94,7 +96,6 @@ class GameWindow < Gosu::Window
       
     }
   end
-
 end
 
 class Ship
@@ -213,14 +214,15 @@ class Ship
     @world_position[1] = @world_position[1]%WORLD_SIZE
   end
 
-  #active for when buttons are down, passive for when you're just hanging out
+  
   def damp_motion(motion)
     wM = @window.world_motion
 
+    #active for when buttons are down, passive for when you're just hanging out
     case motion
 
       when "active"
-
+        #enable cornering based on heading a nearly-cardinal direction
         if @angle.between?(340,359) || @angle.between?(0,10) || @angle.between?(170, 190)
           wM[0] *= 0.985
         elsif @angle.between?(260,280) || @angle.between?(80,100)
@@ -228,12 +230,11 @@ class Ship
         end
 
       when "passive"
-
+        # reduce speed of the world unless it's already really small
         wM[0] *= 0.995 if wM[0].abs>0.05
         wM[1] *= 0.995 if wM[1].abs>0.05
 
-        # wM[0] = 0.01 && wM[1] = -0.01 if wM[0].abs<0.005 && wM[1].abs<0.005
-
+        # spin slowly if the ship isn't being propelled through space
         if @window.world_motion[1] > 0
             @angle = @angle - 0.1%360
         else
@@ -243,7 +244,7 @@ class Ship
       end
   end
 
-  #unused currently, will move ship relative to the viewport
+  #unused currently, can move ship relative to the viewport
   def update_offset
     @offset_counter[1] += 0.01
     @offset_counter[1]=@offset_counter[1]%90
@@ -255,17 +256,18 @@ class Ship
   end
 
   def draw
-
+    #render engine particles
     @particle_array.each do |p|
       p.draw(@offset)
     end
 
+    #render sonar waves
     if @show_sonar
       @sonar_array.each do |s|
         s.draw
       end
     end
-# 
+    # 
     oX = @offset[0]
     oY = @offset[1]
     v = @vert
@@ -325,7 +327,7 @@ class Star
     @rot = rand(90)
     @dir = [-1,1][rand(2)]*rand(100)/500.0
     @color = ColorPicker.color("white")
-    @color = ColorPicker.color('random') if @z < 1.1 && @size < 10
+    @color = ColorPicker.color('random') if @z < 1.1 && @size < 13
   end
 
   def update_position(world_motion)
@@ -355,7 +357,7 @@ class Star
     @z = (rand(25)/10.0)+1
     @size = ((rand(150)+1)/10.0)+0.5
     @rot = rand(90)
-    if @z < 1.1 && @size < 12
+    if @z < 1.1 && @size < 13
       @color = ColorPicker.color('random')
     else
       @color = ColorPicker.color('white')
@@ -531,10 +533,11 @@ class Minimap
 end
 
 class Radio
-  def initialize(window, ship)
+  def initialize(window, ship, artifacts)
     
     @window = window
     @ship = ship
+    @artifact_array = artifacts
     @radio_offset = 0
     static_sound_object = Gosu::Sample.new(window, "media/static.mp3")
     @static = static_sound_object.play(0,1,true)
@@ -543,13 +546,10 @@ class Radio
     @border = [[10, HEIGHT-50], [300, HEIGHT-50], [300, HEIGHT-10], [10, HEIGHT-10]]
     @background = [[11, HEIGHT-49], [299, HEIGHT-49], [299, HEIGHT-11], [11, HEIGHT-11]]
     @reception_color = ColorPicker.color('white')
-    @face = [[15, HEIGHT-45], [294, HEIGHT-45], [294, HEIGHT-15], [15, HEIGHT-15]]
-    @dial_a = [[13, HEIGHT-25], [15, HEIGHT-48], [17, HEIGHT-25], [15, HEIGHT-12]]
-    @dial_b = [[14, HEIGHT-25], [15, HEIGHT-46], [16, HEIGHT-25], [15, HEIGHT-14]]
     @black = ColorPicker.color('black')
     @radio_grey = ColorPicker.color('radio_grey')
     @white = ColorPicker.color('white')
-    @broadcast_range = 10
+    @broadcast_range = 8
     @state = "off"
   end
 
@@ -563,6 +563,9 @@ class Radio
 
     if @radio_offset == 0
       @static.volume = 0
+      @artifact_array.each do |a|
+        a.broadcast.volume = 0
+      end
         if @state == "on"
           @power_button.play(1,1,false)
           @state = "off"
@@ -570,68 +573,74 @@ class Radio
       return
     else
       if @state == "off"
-        @power_button.play(1,1,false) 
+        @power_button.play(1,1,false)
         @state = "on"
       end
     end
 
-    artifacts_to_update = find_artifacts_in_broadcast_range(@broadcast_range)
+    artifacts_to_update = find_artifacts_in_broadcast_range
 
     if artifacts_to_update.length > 0
       @ship.show_sonar = true
       react_to_artifacts(artifacts_to_update)
     else
-      @static.volume = 1
+      @static.volume = 0.75
       @ship.show_sonar = false
     end
-
   end
 
-  def find_artifacts_in_broadcast_range(range)
+  def find_artifacts_in_broadcast_range
     broadcasting_artifacts = []
-    
-    # return [] if broadcasting_artifacts.length == 0
-
-    @window.artifact_array.each do |a|
-
-      broadcasting_artifacts.push([a,distance(@ship.world_position,a.location)]) if a.frequency.between?(@radio_offset-range, @radio_offset+range)
+  
+    @artifact_array.each do |a|
+      signal_closeness = (@radio_offset-a.frequency).abs
+      signal_strength = @broadcast_range - signal_closeness
+      if signal_closeness < @broadcast_range
+        broadcasting_artifacts.push([a,distance(@ship.world_position, a.location), signal_strength]) unless broadcasting_artifacts.length > 4
+      else
+        a.broadcast.volume = 0
+        a.visible_on_map = false
+      end
     end
 
-    broadcasting_artifacts.sort_by! { |x| x[1]}
-
-    broadcasting_artifacts
+    #sort by signal strength
+    broadcasting_artifacts.sort_by! { |x| x[2]}
   end
 
   def react_to_artifacts(artifacts)
 
       artifacts.each do |a|
+        # artifact in question
         aIQ = a[0]
-        if @state == "off"
-          aIQ.broadcast.volume = 0
-          next
-        end
         
-        new_volume = (aIQ.frequency-@radio_offset).abs/@broadcast_range
-        
+        signal_component = (0.6-0.6*(a[2]/(@broadcast_range)))
+        distance_component = (0.45-0.45*(a[1]/(WORLD_SIZE)))
+        broadcast_volume = (signal_component + distance_component)
+        broadcast_volume = 1 if broadcast_volume > 1
         # let closest artifact set static volume
-        scaled_volume = (255*(1-new_volume)).round
-        @reception_color = ColorPicker.color('full_reception', scaled_volume)
         
         if a == artifacts.first
-          @static.volume = new_volume
+          scaled_volume = (255*broadcast_volume).round
+          @reception_color = ColorPicker.color('full_reception', scaled_volume)
+          aIQ.visible_on_map = true
+          aIQ.broadcast.volume = broadcast_volume
+          if a[1] < WIDTH
+            @static.volume = 0
+          else    
+            @static.volume = (1-broadcast_volume) * 0.75
+            puts a[1]
+          end
+
           @ship.sonar_array.each do |s|
             s.next_angle = angle(aIQ.location, @ship.world_position)
-            @ship.countdown_max = 180 * new_volume + 30
+            @ship.countdown_max = 180 * 1-broadcast_volume + 30
           end
+          7
+        else
+          aIQ.broadcast.volume = broadcast_volume * 0.2**artifacts.index(a)
         end
         # set radio volume, scaled by order of array
-          aIQ.broadcast.volume = (1-new_volume) * 0.2**artifacts.index(a)
-        # show on map if close to correct radio frequency
-        if (aIQ.frequency-@radio_offset).abs<5
-          aIQ.visible_on_map = true
-        else
-          aIQ.visible_on_map = false
-        end
+          
       end
   end
 
@@ -820,7 +829,7 @@ class Artifact
     @tower_color = ColorPicker.color('random')
     @dir = rand(1)
     @dir = -1 if @dir == 0
-    mp3_pick = @@count%5+1
+    mp3_pick = @@count%6+1
     sound_obj = Gosu::Sample.new(window, "media/#{mp3_pick.to_s}.mp3")
     @broadcast = sound_obj.play(0,1,true)
     found_sound_obj = Gosu::Sample.new(window, "media/found_planet.mp3")
@@ -846,21 +855,6 @@ class Artifact
   end
 
   def update
-    # case @expand
-    #   when true
-    #     if @size <= @size_limits[1]
-    #       @size += 1
-    #     else
-    #       @expand = false
-    #     end
-    #   when false
-    #     if @size >= @size_limits[0]
-    #       @size -= 1
-    #     else
-    #       @expand = true
-    #     end
-    # end
-
     # if distance(@location, @window.ship.world_position) < 100
     #   @found = true
     #   @found_sound.play(1,1,false) && @should_play_found = false if @should_play_found
