@@ -99,7 +99,7 @@ class GameWindow < Gosu::Window
 end
 
 class Ship
-  attr_accessor :angle, :vert, :engine_sound, :current_engine_volume, :world_position, :show_sonar, :sonar_array, :countdown_max
+  attr_accessor :angle, :vert, :engine_sound, :current_engine_volume, :world_position, :show_sonar, :sonar_array, :countdown_max, :artifact_to_shut_down
   
   def initialize(window)
     @window = window
@@ -120,6 +120,7 @@ class Ship
     @countdown = 0
     @countdown_max = 60
     @show_sonar = false
+    @artifact_to_shut_down = nil
   end
 
   #make the engine particles that fly behind the ship
@@ -131,7 +132,7 @@ class Ship
   end
 
   def create_sonar
-    5.times do
+    10.times do
       @sonar = SonarBar.new(@window, self, 0)
       @sonar_array.push(@sonar)
     end
@@ -160,7 +161,6 @@ class Ship
 
     update_world_motion_relative_to_ship
     update_ship_position
-
   end
 
   def update_world_motion_relative_to_ship
@@ -177,14 +177,18 @@ class Ship
       radAngle = @angle*Math::PI/180
       wM[0] = [ [4, wM[0]-0.01*Math.sin(radAngle)].min, -4].max
       wM[1] = [ [4, wM[1]+0.01*Math.cos(radAngle)].min, -4].max
-      
       adjust_engine_volume("up")
       damp_motion("active")
     else
-    
       adjust_engine_volume("down")
       damp_motion("passive")
-    
+    end
+
+    if @window.button_down? Gosu::KbSpace then
+      if @artifact_to_shut_down != nil
+        @artifact_to_shut_down.broadcast.volume = 0
+        @window.artifact_array.delete(@artifact_to_shut_down) 
+      end
     end
   end
 
@@ -205,7 +209,6 @@ class Ship
     end
   end
 
-  # 
   def update_ship_position
     @world_position[0] -= @window.world_motion[0]
     @world_position[1] -= @window.world_motion[1]
@@ -213,7 +216,6 @@ class Ship
     @world_position[0] = @world_position[0]%WORLD_SIZE
     @world_position[1] = @world_position[1]%WORLD_SIZE
   end
-
   
   def damp_motion(motion)
     wM = @window.world_motion
@@ -539,18 +541,21 @@ class Radio
     @ship = ship
     @artifact_array = artifacts
     @radio_offset = 0
+    
     static_sound_object = Gosu::Sample.new(window, "media/static.mp3")
     @static = static_sound_object.play(0,1,true)
+    
     power_button_sound_object = Gosu::Sample.new(window, "media/button.mp3")
     @power_button = power_button_sound_object
-    @border = [[10, HEIGHT-50], [300, HEIGHT-50], [300, HEIGHT-10], [10, HEIGHT-10]]
-    @background = [[11, HEIGHT-49], [299, HEIGHT-49], [299, HEIGHT-11], [11, HEIGHT-11]]
+    
     @reception_color = ColorPicker.color('white')
     @black = ColorPicker.color('black')
     @radio_grey = ColorPicker.color('radio_grey')
     @white = ColorPicker.color('white')
+    
     @broadcast_range = 8
     @state = "off"
+
   end
 
   def update
@@ -595,8 +600,8 @@ class Radio
     @artifact_array.each do |a|
       signal_closeness = (@radio_offset-a.frequency).abs
       signal_strength = @broadcast_range - signal_closeness
-      if signal_closeness < @broadcast_range
-        broadcasting_artifacts.push([a,distance(@ship.world_position, a.location), signal_strength]) unless broadcasting_artifacts.length > 4
+      if signal_closeness < @broadcast_range &&  broadcasting_artifacts.length < 2 && a.found == false
+        broadcasting_artifacts.push([a,distance(@ship.world_position, a.location), signal_strength])
       else
         a.broadcast.volume = 0
         a.visible_on_map = false
@@ -617,30 +622,30 @@ class Radio
         distance_component = (0.45-0.45*(a[1]/(WORLD_SIZE)))
         broadcast_volume = (signal_component + distance_component)
         broadcast_volume = 1 if broadcast_volume > 1
-        # let closest artifact set static volume
-        
+
+        # let closest artifact set volumes, control sonar, etc
         if a == artifacts.first
           scaled_volume = (255*broadcast_volume).round
           @reception_color = ColorPicker.color('full_reception', scaled_volume)
           aIQ.visible_on_map = true
           aIQ.broadcast.volume = broadcast_volume
-          if a[1] < WIDTH
+          if a[1] < HEIGHT/2
             @static.volume = 0
+            @ship.artifact_to_shut_down = aIQ
           else    
             @static.volume = (1-broadcast_volume) * 0.75
-            puts a[1]
+            @ship.artifact_to_shut_down = nil
           end
 
           @ship.sonar_array.each do |s|
             s.next_angle = angle(aIQ.location, @ship.world_position)
-            @ship.countdown_max = 180 * 1-broadcast_volume + 30
+            @ship.countdown_max = 180 * 1-broadcast_volume + 20
           end
           7
         else
+          # set radio volume for other elements, scaled by index in array
           aIQ.broadcast.volume = broadcast_volume * 0.2**artifacts.index(a)
         end
-        # set radio volume, scaled by order of array
-          
       end
   end
 
@@ -866,16 +871,16 @@ class Artifact
 
   def draw
     l = @location.dup
-    l[0]+= (WIDTH/2 - @window.ship.world_position[0])
-    l[1]+= (HEIGHT/2 - @window.ship.world_position[1])
     s = @size
+    l[0]+= (WIDTH/2 - @window.ship.world_position[0])-s/2
+    l[1]+= (HEIGHT/2 - @window.ship.world_position[1])-s/2
+    
     c = @color
     
     @window.rotate(@rot, l[0]+s/2,l[1]+s/2){
       draw_octagon(@window,l[0], l[1],s, color)
       draw_tower(l,s,c)
-    }
-    
+    }    
   end
 
   def draw_tower(l,s,c)
@@ -973,7 +978,6 @@ class Artifact
     ) 
 
     draw_octagon(@window, s+l[0]-s/2-s/10,l[1]-s*3/4-s/10, s/5, c)
-
   end
 end
 
@@ -1016,11 +1020,11 @@ class SonarBar
     w = @width
     c = ColorPicker.color('sonar', @trans.round)
 
-    @window.rotate(@angle+rand(20)-10+90, @center[0], @center[1]) {
+    @window.rotate(@angle+rand(60)-30+90, @center[0], @center[1]) {
       @window.draw_quad(
         x-w/2, y, c,
-        x-w/2, y+3, c,
-        x+w/2, y+3, c,
+        x-w/2, y+4, c,
+        x+w/2, y+4, c,
         x+w/2, y, c,
         0
       )
@@ -1032,17 +1036,23 @@ class Writer
   attr_accessor
   def initialize(window)
     @window = window
-    @font = Gosu::Font.new(window, "./media/04B03.TTF", 24)
+    @font = Gosu::Font.new(window, "media/04B03.TTF", 24)
     @text = "There's nobody in this one, either..."
+    type_sound_1 = Gosu::Sample.new(window, "./media/type1.mp3")
+    type_sound_2 = Gosu::Sample.new(window, "./media/type2.mp3")
+    type_sound_3 = Gosu::Sample.new(window, "./media/type3.mp3")
+    @type_sound = [type_sound_1, type_sound_2, type_sound_3]
     @scan = 1
     @post_scan_timer_checks = 30
     @timer = 10
     @x = 150
     @y = HEIGHT - 25
     @trans = ColorPicker.color('map_background')
+    @repeat = false
   end
 
   def set_text(text)
+    @repeat = false
     @text = text
     @scan = 0
   end
@@ -1051,10 +1061,16 @@ class Writer
     @timer -=1
     if @timer <=0
       @scan += 1
+      @type_sound[rand(3)].play(1,1, false) unless @repeat
       @scan = 0 if @scan > @text.length
+      
       if @scan == @text.length
         @timer = 3*@post_scan_timer_checks
+        @repeat = true
+      else
+        @timer = 2
       end
+
     end
   end
 
