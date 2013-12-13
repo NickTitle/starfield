@@ -1,6 +1,7 @@
 starfield
 =========
 
+0. Make sure you have ```ruby-2.0.0-p247```
 1. ```gem install gosu```
 2. ```ruby starfield.rb```
 3. Use LEFT, RIGHT, and UP arrows to propel the ship through space
