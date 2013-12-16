@@ -186,8 +186,7 @@ class Ship
 
     if @window.button_down? Gosu::KbSpace then
       if @artifact_to_shut_down != nil
-        @artifact_to_shut_down.broadcast.volume = 0
-        @window.artifact_array.delete(@artifact_to_shut_down) 
+        @artifact_to_shut_down.found = true
       end
     end
   end
@@ -600,7 +599,7 @@ class Radio
     @artifact_array.each do |a|
       signal_closeness = (@radio_offset-a.frequency).abs
       signal_strength = @broadcast_range - signal_closeness
-      if signal_closeness < @broadcast_range &&  broadcasting_artifacts.length < 2 && a.found == false
+      if signal_closeness < @broadcast_range &&  broadcasting_artifacts.length < 2
         broadcasting_artifacts.push([a,distance(@ship.world_position, a.location), signal_strength])
       else
         a.broadcast.volume = 0
@@ -629,6 +628,7 @@ class Radio
           @reception_color = ColorPicker.color('full_reception', scaled_volume)
           aIQ.visible_on_map = true
           aIQ.broadcast.volume = broadcast_volume
+          aIQ.broadcast.volume = 0 if aIQ.found
           if a[1] < HEIGHT/2
             @static.volume = 0
             @ship.artifact_to_shut_down = aIQ
@@ -834,7 +834,7 @@ class Artifact
     @tower_color = ColorPicker.color('random')
     @dir = rand(1)
     @dir = -1 if @dir == 0
-    mp3_pick = @@count%6+1
+    mp3_pick = @@count%7+1
     sound_obj = Gosu::Sample.new(window, "media/#{mp3_pick.to_s}.mp3")
     @broadcast = sound_obj.play(0,1,true)
     found_sound_obj = Gosu::Sample.new(window, "media/found_planet.mp3")
@@ -846,6 +846,9 @@ class Artifact
     @expand = false
     @found = false
     @should_play_found = true
+    @max_cycles_till_turned_off = 150+rand(60)
+    @cycles_till_turned_off = @max_cycles_till_turned_off
+    @flicker_draw = true
 
     debug = false
     if debug
@@ -860,10 +863,17 @@ class Artifact
   end
 
   def update
-    # if distance(@location, @window.ship.world_position) < 100
-    #   @found = true
-    #   @found_sound.play(1,1,false) && @should_play_found = false if @should_play_found
-    # end
+
+    if @found == true
+      @found_sound.play(1,1,false) unless @cycles_till_turned_off < @max_cycles_till_turned_off
+      @cycles_till_turned_off -=1
+      if @cycles_till_turned_off == 0
+        @window.artifact_array.delete(self)
+        return
+      else
+        @flicker_draw = @cycles_till_turned_off%10/7.0.round == 1 ? !@flicker_draw : @flicker_draw
+      end
+    end
 
     @rot += 0.015*@dir
     @rot%=360
@@ -877,6 +887,7 @@ class Artifact
     
     c = @color
     
+    return if @flicker_draw == false
     @window.rotate(@rot, l[0]+s/2,l[1]+s/2){
       draw_octagon(@window,l[0], l[1],s, color)
       draw_tower(l,s,c)
