@@ -1,4 +1,5 @@
 class Writer
+  attr_reader :text
   def initialize(window)
     @window = window
     @font = Gosu::Font.new(window, "media/04B03.TTF", 18)

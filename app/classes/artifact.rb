@@ -46,6 +46,7 @@ class Artifact
       if @cycles_till_turned_off == 0
         @window.artifact_array.delete(self)
         @window.update_story
+        @@count-=1
         return
       else
         @flicker_draw = @cycles_till_turned_off/2%10/6.0.round == 1 ? !@flicker_draw : @flicker_draw

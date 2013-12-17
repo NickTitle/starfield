@@ -1,17 +1,17 @@
 #!/usr/bin/env ruby
 require 'gosu'
 
-require './ship.rb'
-require './radio.rb'
-require './artifact.rb'
+require './classes/ship.rb'
+require './classes/radio.rb'
+require './classes/artifact.rb'
+require './classes/star.rb'
+require './classes/particle.rb'
+require './classes/sonar_bar.rb'
 
-require './star.rb'
-require './particle.rb'
-require './sonar_bar.rb'
+require './classes/minimap.rb'
+require './classes/writer.rb'
 
-require './minimap.rb'
-require './writer.rb'
-
+require './key_event_handler.rb'
 require './helpers.rb'
 require './constants.rb'
 
@@ -29,6 +29,7 @@ class GameWindow < Gosu::Window
     @world_motion = [0.0,0.01];
     @minimap = Minimap.new(self, @ship)
     @writer = Writer.new(self)
+    @key_event_handler = KeyEventHandler.new(self)
 
     @story_state = 0
     @pause_for_story = true
@@ -69,14 +70,14 @@ class GameWindow < Gosu::Window
       star.update_position(@world_motion)
     end
     
-    check_keys_for_story_update
+    @key_event_handler.check_keys
+    
     update_artifacts_in_range
 
     @ship.update
     @minimap.update
     @radio.update
     @writer.update
-    exit if self.button_down? Gosu::KbEscape
   end
 
   def update_artifacts_in_range
@@ -87,14 +88,6 @@ class GameWindow < Gosu::Window
       else
         artifact.should_draw = false
       end
-    end
-  end
-
-  def check_keys_for_story_update
-    if (@story_state == 3 && (self.button_down? Gosu::KbPeriod))
-      update_story
-    elsif (!([3,11].include?@story_state) && (self.button_down? Gosu::KbSpace) && @pause_for_story)
-      update_story
     end
   end
 

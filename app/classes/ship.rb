@@ -1,6 +1,6 @@
 class Ship
-  attr_accessor :angle, :vert, :engine_sound, :current_engine_volume, :world_position, :show_sonar, :sonar_array, :countdown_max, :artifact_to_shut_down
-  
+  attr_accessor :angle, :engine_sound, :current_engine_volume, :world_position, :show_sonar, :sonar_array, :countdown_max, :artifact_to_shut_down
+  attr_reader   :vert
   def initialize(window)
     @window = window
     #these are the vertices of the ship (top, left, right, bottom)
@@ -17,8 +17,8 @@ class Ship
     @world_position = [WORLD_SIZE/2, WORLD_SIZE/2]
     create_particles
     create_sonar
-    @countdown = 0
-    @countdown_max = 60
+    @sonar_countdown = 0
+    @sonar_countdown_max = 60
     @show_sonar = false
     @artifact_to_shut_down = nil
   end
@@ -48,51 +48,26 @@ class Ship
       s.update
     end
 
-    @countdown -=1
-    if @countdown <= 0
-
+    @sonar_countdown -=1
+    if @sonar_countdown <= 0
       @sonar_array.each do |s|
         s.reset
       end
-
-      @countdown = @countdown_max
-
+      @sonar_countdown = @sonar_countdown_max
     end
 
-    update_world_motion_relative_to_ship
     update_ship_position
   end
 
-  def update_world_motion_relative_to_ship
-    
-    if @window.pause_for_story
-      damp_motion("passive")
+  def update_world_motion_relative_to_ship(left=false, right=false, up=false)
 
-      if @window.story_state == 11 && (@window.button_down? Gosu::KbSpace)
-        return if Time.now - @window.last_story_update_time < 1
-        if @artifact_to_shut_down != nil
-          @artifact_to_shut_down.found = true
-        end
-      end
-      return
-    end
-
-    if ([7,14].include?@window.story_state) && ((@window.button_down? Gosu::KbLeft) || (@window.button_down? Gosu::KbRight) || (@window.button_down? Gosu::KbUp))
-      @window.writer.set_text=""
-    end
-    
-    wM = @window.world_motion
-
-    if @window.button_down? Gosu::KbLeft or @window.button_down? Gosu::GpLeft then
+    if left
       @angle = (@angle-2)%360
-    end
-    if @window.button_down? Gosu::KbRight or @window.button_down? Gosu::GpRight then
+    elsif right
       @angle = (@angle+2)%360
     end
-    if @window.button_down? Gosu::KbUp or @window.button_down? Gosu::GpUp then
-      radAngle = @angle*Math::PI/180
-      wM[0] = [ [4, wM[0]-0.01*Math.sin(radAngle)].min, -4].max
-      wM[1] = [ [4, wM[1]+0.01*Math.cos(radAngle)].min, -4].max
+    if up
+      adjust_world_motion
       adjust_engine_volume("up")
       damp_motion("active")
     else
@@ -100,11 +75,13 @@ class Ship
       damp_motion("passive")
     end
 
-    if (@window.button_down? Gosu::KbSpace) && !@window.pause_for_story
-      if @artifact_to_shut_down != nil
-        @artifact_to_shut_down.found = true
-      end
-    end
+  end
+
+  def adjust_world_motion
+    wM = @window.world_motion
+    radAngle = @angle*Math::PI/180
+    wM[0] = [ [4, wM[0]-0.01*Math.sin(radAngle)].min, -4].max
+    wM[1] = [ [4, wM[1]+0.01*Math.cos(radAngle)].min, -4].max
   end
 
   # pass "up" or "down" to adjust engine volume

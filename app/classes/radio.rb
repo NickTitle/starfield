@@ -1,4 +1,5 @@
 class Radio
+  attr_accessor :radio_offset
   def initialize(window, ship, artifacts)
     
     @window = window
@@ -23,14 +24,6 @@ class Radio
   end
 
   def update
-    return if @window.story_state < 3
-
-      if @window.button_down? Gosu::KbComma
-        @radio_offset -= 0.5 unless @radio_offset < 0.5
-      end
-      if @window.button_down? Gosu::KbPeriod
-        @radio_offset += 0.5 unless @radio_offset > 274.5
-      end
 
     if @radio_offset == 0
       @static.volume = 0
@@ -102,11 +95,11 @@ class Radio
           aIQ.visible_on_map = true
           aIQ.broadcast.volume = broadcast_volume
           aIQ.broadcast.volume = 0 if aIQ.found
-          if a[1] < HEIGHT/3
+          if a[1] < HEIGHT/4 && a[1] < WIDTH/4
             react_to_close_artifact(aIQ)
           else    
             @static.volume = (1-broadcast_volume) * 0.75
-            @ship.artifact_to_shut_down = nil
+            @ship.artifact_to_shut_down = nil unless @window.pause_for_story
           end
 
           @ship.sonar_array.each do |s|
@@ -124,13 +117,17 @@ class Radio
   def react_to_close_artifact(aIQ)
     @static.volume = 0
     @ship.artifact_to_shut_down = aIQ
+    ### STORY CODE
     # find out if you're supposed to advance the story upon reaching this artifact
-    if [7,15].include?@window.story_state
-      wM = @window.world_motion
-      wM[0] *= 0.1
-      wM[1] *= 0.1
+    if [7,14,19].include?@window.story_state
       @window.update_story
     end 
+    if @window.pause_for_story
+      wM = @window.world_motion
+      wM[0] *= 0.95
+      wM[1] *= 0.95
+    end
+    ### END STORY CODE
   end
 
   def draw

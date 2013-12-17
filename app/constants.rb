@@ -16,13 +16,14 @@ STORY = [
   ["But there's more on the radio.", true],
   ["If I shut this thing down, I can hear more radio signals.", true],      #10
   ["(press SPACE)", true],
-  ["It was nothing, after all - just an old artifact", true],
+  ["It was nothing, after all - just some old artifact.", true],
   ["..but I hear almost a dozen of these.", true],
-  ["Maybe she made it to one...", false],
+  ["Maybe she made it to one...  ( tune with ',' and '.' )", false],
   ["This one is empty, too.", true],
-  ["I'll just shut it down and clear the radio some more.", false],
-  ["Each empty artifact is just one less place to look", false],
+  ["I'll just shut it down and clear the radio some more.", true],
+  ["(press SPACE)", true],
+  ["Each empty artifact is just one less place to look", true],
   ["Did what happened to me happen here too?", false],
-  ["...and did what happened to me, happen to you?", false],
   ["...and did what happened to me, happen to you?", false],                #20
+  ["...and did what happened to me, happen to you?", false],                
 ]

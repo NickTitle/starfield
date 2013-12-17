@@ -27,7 +27,7 @@ class ColorPicker
         when "map_background"
           color_string = 0x33FFFFFF
         when "writer_background" 
-          color_string = 0xAAFFFFFF
+          color_string = 0xBBFFFFFF
         when "grill_grey"
           color_string = 0xFFEBEBEB
         when "frame_blue"
