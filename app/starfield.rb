@@ -32,9 +32,8 @@ class GameWindow < Gosu::Window
     @key_event_handler = KeyEventHandler.new(self)
     @last_story_update_time = Time.now
 
-    @story_state = 10000
-    @pause_for_story = false
-    @last_story_update_time = 0
+    @story_state = 0
+    @pause_for_story = true
 
     # setup_writer
     create_stars

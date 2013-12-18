@@ -13,7 +13,7 @@ class KeyEventHandler
 
         radio_bindings_for_story(@w.radio)
         ship_bindings_for_story(@w.ship)
-        
+
       when false
         #key bindings for non-story-critical moments
         radio_bindings_non_story(@w.radio)
@@ -50,14 +50,17 @@ class KeyEventHandler
   end
 
   def ship_bindings_for_story(s) #s = ship
-
+    
+    s.update_world_motion_relative_to_ship
+    
     # turn off artifacts if the conditions are right
-    if ([11,17].include?@w.story_state) && (@w.button_down? Gosu::KbSpace)
+    if ([11,16].include?@w.story_state) && (@w.button_down? Gosu::KbSpace)
       return if Time.now - @w.last_story_update_time < 1
       if s.artifact_to_shut_down != nil
         s.artifact_to_shut_down.found = true
       end
     end
+
 
   end
 
