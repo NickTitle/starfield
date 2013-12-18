@@ -27,13 +27,19 @@ class Radio
 
     if @radio_offset == 0
       @static.volume = 0
+      @ship.show_sonar = false
+      # turn off artifacts
       @artifact_array.each do |a|
         a.broadcast.volume = 0
+        a.visible_on_map = false
       end
-        if @state == "on"
-          @power_button.play(1,1,false)
-          @state = "off"
-        end
+      @ship.artifact_to_shut_down = nil
+      # play the power button off sound if it just turned off
+      if @state .== "on"
+        @power_button.play(1,1,false)
+        @state = "off"
+      end
+      
       return
     else
 
@@ -73,7 +79,7 @@ class Radio
   end
 
   def react_to_artifacts(artifacts)
-
+    @ship.artifact_to_shut_down = nil unless @window.pause_for_story
       artifacts.each do |a|
         # artifact in question
         aIQ = a[0]
@@ -95,9 +101,12 @@ class Radio
           aIQ.visible_on_map = true
           aIQ.broadcast.volume = broadcast_volume
           aIQ.broadcast.volume = 0 if aIQ.found
+          # a[1] is distance between ship and object
+          # if it's less than half a screen, put the ship in orbit
           if a[1] < HEIGHT/2 && a[1] < WIDTH/2
             react_to_close_artifact(aIQ)
           else    
+
             @static.volume = (1-broadcast_volume) * 0.75
             @ship.artifact_to_shut_down = nil unless @window.pause_for_story
           end
@@ -110,6 +119,7 @@ class Radio
         else
           # set radio volume for other elements, scaled by index in array
           aIQ.broadcast.volume = broadcast_volume * 0.2**artifacts.index(a)
+          aIQ.visible_on_map = false
         end
       end
   end
@@ -120,14 +130,14 @@ class Radio
     
     ### STORY CODE
     # find out if you're supposed to advance the story upon reaching this artifact
-    if [7,14,19].include?@window.story_state
-      @window.update_story
+    if RADIO_CUES.include?@window.story_state
+      @window.update_story unless DEBUG
     end 
-    if @window.pause_for_story
-      wM = @window.world_motion
-      wM[0] *= 0.95
-      wM[1] *= 0.95
-    end
+    # if @window.pause_for_story
+    #   wM = @window.world_motion
+    #   wM[0] *= 0.95
+    #   wM[1] *= 0.95
+    # end
     ### END STORY CODE
   end
 

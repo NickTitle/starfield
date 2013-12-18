@@ -1,5 +1,5 @@
 class Ship
-  attr_accessor :angle, :engine_sound, :current_engine_volume, :location, :velocity, :show_sonar, :sonar_array, :countdown_max, :artifact_to_shut_down, :orbit_speed, :artifact_to_orbit
+  attr_accessor :angle, :engine_sound, :current_engine_volume, :location, :velocity, :show_sonar, :sonar_array, :countdown_max, :artifact_to_shut_down, :orbit_speed
   attr_reader   :vert
   def initialize(window)
     @window = window
@@ -100,13 +100,13 @@ class Ship
     aLoc = @artifact_to_shut_down.location
     sLoc = self.location
 
-    @velocity[0] *= 0.5 if @velocity[0].abs > 2
-    @velocity[1] *= 0.5 if @velocity[1].abs > 2
+    @velocity[0] *= 0.9 if @velocity[0].abs > 2
+    @velocity[1] *= 0.9 if @velocity[1].abs > 2
+    scalar = 0.03 * [distance(aLoc, sLoc)/(HEIGHT/3), 1].min
 
-    @velocity[0] -=0.01 if sLoc[0] > aLoc[0]
-    @velocity[0] +=0.01 if sLoc[0] < aLoc[0]
-    @velocity[1] -=0.01 if sLoc[1] > aLoc[1]
-    @velocity[1] +=0.01 if sLoc[1] < aLoc[1]
+    @velocity[0] += (sLoc[0] > aLoc[0]) ? -scalar : scalar
+    @velocity[1] += (sLoc[1] > aLoc[1]) ? -scalar : scalar
+    
 
     calc_angle = Math.atan2(@velocity[1], @velocity[0]) * 180/ Math::PI
     calc_angle += 360 if calc_angle < 0
@@ -147,7 +147,7 @@ class Ship
 
       when "active"
         #enable cornering based on heading a nearly-cardinal direction
-        if @angle.between?(340,359) || @angle.between?(0,10) || @angle.between?(170, 190)
+        if (@angle.between?(340,359) || @angle.between?(0,10) || @angle.between?(170, 190))
           @velocity[0] *= 0.985
         elsif @angle.between?(260,280) || @angle.between?(80,100)
           @velocity[1] *= 0.985

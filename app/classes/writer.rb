@@ -9,7 +9,7 @@ class Writer
     type_sound_3 = Gosu::Sample.new(window, "./media/type3.mp3")
     @type_sound = [type_sound_1, type_sound_2, type_sound_3]
     @scan = 1
-    @post_scan_timer_checks = 30
+    @post_scan_timer_checks = 60
     @timer = 10
     @x = 150
     @y = HEIGHT - 20

@@ -43,8 +43,9 @@ class Artifact
       @found_sound.play(1,1,false) unless @cycles_till_turned_off < @max_cycles_till_turned_off
       @cycles_till_turned_off -=1
       if @cycles_till_turned_off == 0
+        @window.ship.artifact_to_shut_down = nil
         @window.artifact_array.delete(self)
-        @window.update_story
+        @window.update_story unless DEBUG
         @@count-=1
         return
       else
