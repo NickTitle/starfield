@@ -52,7 +52,7 @@ def distance(a,b)
   ((b[0]-a[0])**2 + (b[1]-a[1])**2)**0.5
 end
 
-def angle(a,b)
+def get_angle(a,b)
   Math.atan2(b[1]-a[1],b[0]-a[0]) * 180 / Math::PI
 end
 

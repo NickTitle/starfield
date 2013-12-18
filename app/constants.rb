@@ -3,6 +3,8 @@ WINDOW_HEIGHT = 600
 WIDTH = 640
 HEIGHT = 480
 WORLD_SIZE = 25000.0
+DEBUG = false
+
 STORY = [
   ["It's all gone...                 ( press space )", true],               #0
   ["... and it's been weeks since I touched these controls.", true],

@@ -61,7 +61,7 @@ class Radio
       signal_closeness = (@radio_offset-a.frequency).abs
       signal_strength = @broadcast_range - signal_closeness
       if signal_closeness < @broadcast_range &&  broadcasting_artifacts.length < 2
-        broadcasting_artifacts.push([a,distance(@ship.world_position, a.location), signal_strength])
+        broadcasting_artifacts.push([a,distance(@ship.location, a.location), signal_strength])
       else
         a.broadcast.volume = 0
         a.visible_on_map = false
@@ -95,7 +95,7 @@ class Radio
           aIQ.visible_on_map = true
           aIQ.broadcast.volume = broadcast_volume
           aIQ.broadcast.volume = 0 if aIQ.found
-          if a[1] < HEIGHT/4 && a[1] < WIDTH/4
+          if a[1] < HEIGHT/2 && a[1] < WIDTH/2
             react_to_close_artifact(aIQ)
           else    
             @static.volume = (1-broadcast_volume) * 0.75
@@ -103,7 +103,7 @@ class Radio
           end
 
           @ship.sonar_array.each do |s|
-            s.next_angle = angle(aIQ.location, @ship.world_position)
+            s.next_angle = get_angle(aIQ.location, @ship.location)
             @ship.countdown_max = 180 * 1-broadcast_volume + 20
           end
           7
@@ -117,6 +117,7 @@ class Radio
   def react_to_close_artifact(aIQ)
     @static.volume = 0
     @ship.artifact_to_shut_down = aIQ
+    
     ### STORY CODE
     # find out if you're supposed to advance the story upon reaching this artifact
     if [7,14,19].include?@window.story_state

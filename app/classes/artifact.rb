@@ -24,8 +24,7 @@ class Artifact
     @cycles_till_turned_off = @max_cycles_till_turned_off
     @flicker_draw = true
 
-    debug = false
-    if debug
+    if DEBUG
       @rot = 0
       @frequency = 2
       @location = [WORLD_SIZE/2, WORLD_SIZE/2]
@@ -60,8 +59,8 @@ class Artifact
   def draw
     l = @location.dup
     s = @size
-    l[0]+= (WIDTH/2 - @window.ship.world_position[0])-s/2
-    l[1]+= (HEIGHT/2 - @window.ship.world_position[1])-s/2
+    l[0]+= (WIDTH/2 - @window.ship.location[0])-s/2
+    l[1]+= (HEIGHT/2 - @window.ship.location[1])-s/2
     
     c = @color
     

@@ -13,6 +13,7 @@ class KeyEventHandler
 
         radio_bindings_for_story(@w.radio)
         ship_bindings_for_story(@w.ship)
+        
       when false
         #key bindings for non-story-critical moments
         radio_bindings_non_story(@w.radio)

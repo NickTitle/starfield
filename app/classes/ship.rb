@@ -1,5 +1,5 @@
 class Ship
-  attr_accessor :angle, :engine_sound, :current_engine_volume, :world_position, :show_sonar, :sonar_array, :countdown_max, :artifact_to_shut_down
+  attr_accessor :angle, :engine_sound, :current_engine_volume, :location, :velocity, :show_sonar, :sonar_array, :countdown_max, :artifact_to_shut_down, :orbit_speed, :artifact_to_orbit
   attr_reader   :vert
   def initialize(window)
     @window = window
@@ -14,13 +14,19 @@ class Ship
     sound_obj = Gosu::Sample.new(window, "media/engine2.wav")
     @engine_sound = sound_obj.play(0,1,true)
     @current_engine_volume = 0
-    @world_position = [WORLD_SIZE/2, WORLD_SIZE/2]
-    create_particles
-    create_sonar
+    @location = [WORLD_SIZE/2+rand(100), WORLD_SIZE/2+rand(100)]
+    @velocity = [0,0]
     @sonar_countdown = 0
     @sonar_countdown_max = 60
     @show_sonar = false
     @artifact_to_shut_down = nil
+    @artifact_to_orbit = nil
+    @orbit_speed = 0
+    @orbit_angle = 0
+
+    create_particles
+    create_sonar
+    
   end
 
   #make the engine particles that fly behind the ship
@@ -72,7 +78,13 @@ class Ship
       damp_motion("active")
     else
       adjust_engine_volume("down")
-      damp_motion("passive")
+      
+      if @artifact_to_shut_down && !(left || right || up)
+        adjust_for_orbit
+      else
+        damp_motion("passive")
+      end
+
     end
 
   end
@@ -80,8 +92,26 @@ class Ship
   def adjust_world_motion
     wM = @window.world_motion
     radAngle = @angle*Math::PI/180
-    wM[0] = [ [4, wM[0]-0.01*Math.sin(radAngle)].min, -4].max
-    wM[1] = [ [4, wM[1]+0.01*Math.cos(radAngle)].min, -4].max
+    @velocity[0] = [ [4, @velocity[0]+0.01*Math.sin(radAngle)].min, -4].max
+    @velocity[1] = [ [4, @velocity[1]-0.01*Math.cos(radAngle)].min, -4].max
+  end
+
+  def adjust_for_orbit
+    aLoc = @artifact_to_shut_down.location
+    sLoc = self.location
+
+    @velocity[0] *= 0.5 if @velocity[0].abs > 2
+    @velocity[1] *= 0.5 if @velocity[1].abs > 2
+
+    @velocity[0] -=0.01 if sLoc[0] > aLoc[0]
+    @velocity[0] +=0.01 if sLoc[0] < aLoc[0]
+    @velocity[1] -=0.01 if sLoc[1] > aLoc[1]
+    @velocity[1] +=0.01 if sLoc[1] < aLoc[1]
+
+    calc_angle = Math.atan2(@velocity[1], @velocity[0]) * 180/ Math::PI
+    calc_angle += 360 if calc_angle < 0
+    @orbit_angle = calc_angle + 90
+    @angle = @orbit_angle
   end
 
   # pass "up" or "down" to adjust engine volume
@@ -102,11 +132,11 @@ class Ship
   end
 
   def update_ship_position
-    @world_position[0] -= @window.world_motion[0]
-    @world_position[1] -= @window.world_motion[1]
+    @location[0] += @velocity[0]
+    @location[1] += @velocity[1]
 
-    @world_position[0] = @world_position[0]%WORLD_SIZE
-    @world_position[1] = @world_position[1]%WORLD_SIZE
+    @location[0] = @location[0]%WORLD_SIZE
+    @location[1] = @location[1]%WORLD_SIZE
   end
   
   def damp_motion(motion)
@@ -118,18 +148,18 @@ class Ship
       when "active"
         #enable cornering based on heading a nearly-cardinal direction
         if @angle.between?(340,359) || @angle.between?(0,10) || @angle.between?(170, 190)
-          wM[0] *= 0.985
+          @velocity[0] *= 0.985
         elsif @angle.between?(260,280) || @angle.between?(80,100)
-          wM[1] *= 0.985
+          @velocity[1] *= 0.985
         end
 
       when "passive"
         # reduce speed of the world unless it's already really small
-        wM[0] *= 0.995 if wM[0].abs>0.05
-        wM[1] *= 0.995 if wM[1].abs>0.05
+        @velocity[0] *= 0.995 if @velocity[0].abs>0.05
+        @velocity[1] *= 0.995 if @velocity[1].abs>0.05
 
         # spin slowly if the ship isn't being propelled through space
-        if @window.world_motion[1] > 0
+        if @velocity[1] > 0
             @angle = @angle - 0.1%360
         else
             @angle = @angle + 0.1%360
@@ -168,7 +198,7 @@ class Ship
     ship_grey = @color
     white = ColorPicker.color('white')
     dark_grey = ColorPicker.color('dark_grey')
-
+    
     @window.rotate(@angle, @vert['b'][0], @vert['b'][1]){
       #left border
       @window.draw_triangle(

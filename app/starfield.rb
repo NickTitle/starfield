@@ -30,12 +30,13 @@ class GameWindow < Gosu::Window
     @minimap = Minimap.new(self, @ship)
     @writer = Writer.new(self)
     @key_event_handler = KeyEventHandler.new(self)
+    @last_story_update_time = Time.now
 
-    @story_state = 0
-    @pause_for_story = true
+    @story_state = 10000
+    @pause_for_story = false
     @last_story_update_time = 0
 
-    setup_writer
+    # setup_writer
     create_stars
     create_artifacts
 
@@ -58,8 +59,8 @@ class GameWindow < Gosu::Window
   end
 
   def create_artifacts
-    11.times do
-    # 16.times do
+    artifact_count = DEBUG ? 1 : 11
+    artifact_count.times do
       @artifact = Artifact.new(self)
       @artifact_array.push(@artifact)
     end
@@ -82,7 +83,7 @@ class GameWindow < Gosu::Window
 
   def update_artifacts_in_range
     @artifact_array.each do |artifact|
-      if (artifact.location[0]-@ship.world_position[0]).abs < 1.5*WIDTH && (artifact.location[1]-@ship.world_position[1]).abs < 1.5*HEIGHT
+      if (artifact.location[0]-@ship.location[0]).abs < 1.5*WIDTH && (artifact.location[1]-@ship.location[1]).abs < 1.5*HEIGHT
         artifact.update
         artifact.should_draw = true
       else

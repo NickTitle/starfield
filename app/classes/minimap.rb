@@ -33,7 +33,7 @@ class Minimap
 
     if @should_draw_ship
       c = ColorPicker.color("white")
-      shipLoc = get_coords_for_position(@ship.world_position)
+      shipLoc = get_coords_for_position(@ship.location)
       
       x = o+shipLoc[0]
       y = o+shipLoc[1]

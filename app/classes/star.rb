@@ -2,6 +2,7 @@ class Star
   attr_accessor :x, :y, :z, :size
   def initialize(window)
     @window = window
+    @ship = @window.ship
     @x = rand(640)
     @y = rand(480)
     @z = (rand(25)/10.0)+1
@@ -13,13 +14,13 @@ class Star
   end
 
   def update_position(world_motion)
-    @y += world_motion[1]*@z
+    @y += -1*@ship.velocity[1]*@z
     if @y < 0 || @y > 480
       reposition_star('x')
       @y%=480
     end
     
-    @x += world_motion[0]*@z
+    @x += -1*@ship.velocity[0]*@z
     if @x < 0 || @x > 640
       reposition_star('y')
       @x%=640
