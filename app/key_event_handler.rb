@@ -35,7 +35,12 @@ class KeyEventHandler
   end
 
   def window_key_bindings_for_story
-    if (@w.story_state == 3 && @period)
+    if @w.game_state == 0 && @w.end_screen_transparency > 0
+      return
+    elsif @w.game_state == 0 && @w.end_screen_transparency == 0 && @space
+      @w.game_state = 1
+      @w.start_story
+    elsif (@w.story_state == 3 && @period)
       @w.update_story
     end
     if !(ARTIFACT_CUES.include?@w.story_state) && @w.story_state != 3 && @space

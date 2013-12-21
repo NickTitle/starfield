@@ -26,7 +26,7 @@ class Artifact
 
     if DEBUG
       @rot = 0
-      @frequency = 2
+      @frequency = 45
       @location = [WORLD_SIZE/2, WORLD_SIZE/2]
     else
       @rot = rand(180-90)

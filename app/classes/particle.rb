@@ -38,7 +38,7 @@ class Particle
   end
 
   def reset_particle(up)
-    if (!@window.pause_for_story && up) || @window.game_state == 4
+    if (!@window.pause_for_story && up) || ([0,4].include?@window.game_state)
       @y_scalar = 1.0
     else
       @y_scalar = [@y_scalar*0.7, 0.2].max

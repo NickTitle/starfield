@@ -207,8 +207,8 @@ class Ship
       end
     end
     # 
-    if @window.is_gameplay_state?
-      
+    if @window.is_gameplay_state? || @window.game_state == 0
+
       #render engine particles
       @particle_array.each do |p|
         p.draw(@offset)
@@ -216,7 +216,7 @@ class Ship
       draw_ship_1
 
     else
-      
+      puts @window.game_state      
       @window.translate(25,25){
         @particle_array.each do |p|
           p.draw(@offset)

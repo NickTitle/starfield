@@ -3,7 +3,8 @@ class Writer
   def initialize(window)
     @window = window
     @font = Gosu::Font.new(window, "media/04B03.TTF", 18)
-    @text = "There's nobody in this one, either..."
+    @big_font = Gosu::Font.new(window, "media/04B03.TTF", 165)
+    @text = ""
     type_sound_1 = Gosu::Sample.new(window, "./media/type1.mp3")
     type_sound_2 = Gosu::Sample.new(window, "./media/type2.mp3")
     type_sound_3 = Gosu::Sample.new(window, "./media/type3.mp3")
@@ -51,4 +52,13 @@ class Writer
     )
     @font.draw(@text[0, @scan], @x, @y+1, 0, 1, 1, ColorPicker.color('dark_grey'), :default)
   end
+
+  def draw_title
+    @big_font.draw("Starfield", 18, 10, 0, 1, 1, ColorPicker.color('white'), :default)
+    
+    if @window.end_screen_transparency == 0
+      @font.draw("Press SPACE to begin", 225, 170, 0, 1, 1, ColorPicker.color('white'), :default)
+    end
+  end
+
 end

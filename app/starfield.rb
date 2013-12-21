@@ -17,7 +17,7 @@ require './constants.rb'
 
 class GameWindow < Gosu::Window
   attr_accessor :world_motion, :artifact_array, :radio, :pause_for_story, :story_state, :writer, :last_story_update_time, :game_state
-  attr_reader :ship
+  attr_reader :ship, :end_screen_transparency
 
   def initialize
     super WINDOW_WIDTH, WINDOW_HEIGHT, false
@@ -29,7 +29,7 @@ class GameWindow < Gosu::Window
     #2= fadeout
     #3= pause after fadeout
     #4= fadein
-    @game_state = 1
+    @game_state = 0
 
     @black = Gosu::Color.new(0xFF000000)
     @star_array = []
@@ -42,7 +42,7 @@ class GameWindow < Gosu::Window
     @last_story_update_time = Time.now
     @fade_back_in_timer == 0
     @story_ending = false    
-    @end_screen_transparency = 0
+    @end_screen_transparency = 255
     @scale = WINDOW_WIDTH/(WIDTH*1.000)
     @space_blue = ColorPicker.color('space')
 
@@ -50,8 +50,8 @@ class GameWindow < Gosu::Window
     if !DEBUG
       @story_state = 0#57#
       @pause_for_story = true
-      setup_writer
     else
+      @game_state = 1
       @story_state = 99999
       @pause_for_story = false
     end
@@ -64,7 +64,7 @@ class GameWindow < Gosu::Window
 
   end
 
-  def setup_writer
+  def start_story
     @writer.set_text=(STORY[@story_state][0])
     @pause_for_story = true
     @last_story_update_time = Time.now
@@ -132,14 +132,18 @@ class GameWindow < Gosu::Window
   end
 
   def update_for_game_state_change
-    if @game_state == 2 && @end_screen_transparency < 255
+    if @game_state == 0 && @end_screen_transparency > 0
+      @end_screen_transparency -= 0.5
+    elsif @game_state == 2 && @end_screen_transparency < 255
       @end_screen_transparency += 0.7
     elsif @game_state == 2 && @end_screen_transparency >= 255
       @pause_for_story = true
       @game_state = 3
       @fade_back_in_timer = 240
     end
-    update_finale if !is_gameplay_state?
+
+    update_finale unless(is_gameplay_state? || @game_state == 0)
+
   end
 
   def update_finale
@@ -164,7 +168,8 @@ class GameWindow < Gosu::Window
       )
 
       draw_for_gameplay
-      draw_fade_out if ([2,3,4].include?@game_state)
+      @writer.draw_title if @game_state == 0
+      draw_fade_out if ([0,2,3,4].include?@game_state)
     }
   end
 
@@ -187,7 +192,7 @@ class GameWindow < Gosu::Window
     end
 
       #hud
-      if [1,2].include?@game_state
+      if is_gameplay_state?
         @minimap.draw
         @writer.draw
         @radio.draw

@@ -84,7 +84,7 @@ class Radio
         # artifact in question
         aIQ = a[0]
         
-        signal_component = (0.6-0.6*(a[2]/(@broadcast_range)))
+        signal_component = (0.6-0.6*((@broadcast_range-a[2])/(@broadcast_range)))
         distance_component = (0.45-0.45*(a[1]/(WORLD_SIZE)))
         broadcast_volume = (signal_component + distance_component)
         broadcast_volume = 1 if broadcast_volume > 1
