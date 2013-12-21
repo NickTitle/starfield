@@ -3,8 +3,9 @@ class Particle
 
   def initialize(window, ship)
     @window = window
-    @x = ship.vert['b'][0]
-    @y = ship.vert['b'][1]
+    @origin = ship.particle_origin
+    @x = ship.particle_origin[0]
+    @y = ship.particle_origin[1]
     @xvel = (rand(4)+1)-8
     @yvel = rand(8)+1
     @size = rand(3)+1
@@ -15,7 +16,7 @@ class Particle
     @ship = ship
   end
 
-  def update_position
+  def update_position(up = false)
     @x += @xvel
     @xvel = @xvel*0.7
     @y += @yvel
@@ -33,18 +34,18 @@ class Particle
       @color = ColorPicker.color('red')
     end
 
-    reset_particle unless @cycles < @max_cycles
+    reset_particle(up) unless @cycles < @max_cycles
   end
 
-  def reset_particle
-    if !@window.pause_for_story && (@window.button_down? Gosu::KbUp or @window.button_down? Gosu::GpUp) then
+  def reset_particle(up)
+    if (!@window.pause_for_story && up) || @window.game_state == 4
       @y_scalar = 1.0
     else
       @y_scalar = [@y_scalar*0.7, 0.2].max
     end
 
-    @x = @ship.vert['b'][0]
-    @y = @ship.vert['b'][1]
+    @x = @origin[0]
+    @y = @origin[1]
     @xvel = ((rand(50)+1)/10.0-2.5) * y_scalar
     @yvel = rand(2)+8 * y_scalar
     @cycles = 0
@@ -59,7 +60,7 @@ class Particle
     ymin = @y-@size/2+offset[1]
     ymax = @y+@size/2+offset[1]
 
-    @window.rotate(@angle, @ship.vert['b'][0], @ship.vert['b'][1]){
+    @window.rotate(@angle, origin[0], origin[1]){
       @window.draw_quad(
         xmin, ymin, @color,
         xmax, ymin, @color,

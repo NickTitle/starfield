@@ -9,7 +9,7 @@ class SonarBar
     @next_angle = 0
     @width = 2
     @trans = 0
-    @center = @ship.vert['b']
+    @center = @ship.sonar_origin
     @x = @center[0]
     @y = @center[1]
     

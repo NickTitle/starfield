@@ -16,6 +16,8 @@ class ColorPicker
           color_string = 0xFFFF00FF
         when "white"
           color_string = 0xFFFFFFFF
+        when "star_white"
+          color_string = 0x66FFFFFF
         when "black"
           color_string = 0xFF000000
         when "ship_grey"
@@ -34,15 +36,27 @@ class ColorPicker
           color_string = 0xFF3885D1
         when "dial_orange"
           color_string = 0xFFFF7735
+        when "ship_orange"
+          color_string = 0xFFE98820
+        when "space"
+          color_string = 0xFF070B1B
+        when "patch_brown"
+          color_string = 0xFF322611
+        when "patch_green"
+          color_string = 0xFF2D940A
         when "random"
-          color_string = ("0xFF"+rand(0xFFFFFF).to_s(16).upcase).to_i(16)
+          color_string = ("0xFF"+(rand(0xFFFFFF).to_s(16).upcase)).to_i(16)
         when "full_reception"
           c = trans.to_s(16).upcase
           color_string = ("0x"+c+"FFFFCC").to_i(16)
         when "sonar"
           c = trans.to_s(16).upcase
           color_string = ("0x"+c+"63ADD0").to_i(16)
+        when "fade_out"
+          c = trans.to_s(16).upcase
+          color_string = ("0x"+c+"000000").to_i(16)
         end
+
 
       Gosu::Color.new(color_string)
     end

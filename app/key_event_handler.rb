@@ -15,9 +15,6 @@ class KeyEventHandler
     @comma = true if @w.button_down? Gosu::KbComma
     @period = true if @w.button_down? Gosu::KbPeriod
 
-
-
-
     case @w.pause_for_story
       
       when true
@@ -56,6 +53,12 @@ class KeyEventHandler
   def radio_bindings_non_story(r)
     if @w.button_down? Gosu::KbComma
         r.radio_offset -= 0.5 unless r.radio_offset < 0.5
+        
+        # special case to start ending the game
+        if @w.story_state == 59 && r.radio_offset == 0
+          @w.update_story
+          @w.writer.set_text=""
+        end
       end
     if @w.button_down? Gosu::KbPeriod
       r.radio_offset += 0.5 unless r.radio_offset > 274.5
@@ -80,8 +83,9 @@ class KeyEventHandler
   def ship_bindings_non_story(s) #s = ship
 
     #figure out whether to move the ship or not
-
-    s.update_world_motion_relative_to_ship(@left,@right,@up)
+    unless [0,4].include?@w.game_state
+      s.update_world_motion_relative_to_ship(@left,@right,@up)
+    end
     
     # if there's an artifact in front of you, and it's not in the story, shut it down!
     if @space && s.artifact_to_shut_down != nil

@@ -1,14 +1,18 @@
 class Ship
-  attr_accessor :angle, :engine_sound, :current_engine_volume, :location, :velocity, :show_sonar, :sonar_array, :countdown_max, :artifact_to_shut_down, :orbit_speed
-  attr_reader   :vert
-  def initialize(window)
+  attr_accessor :angle, :engine_sound, :current_engine_volume, :location, :translation, :velocity, :show_sonar, :sonar_array, :countdown_max, :artifact_to_shut_down, :orbit_speed
+  attr_reader   :particle_origin, :sonar_origin
+  def initialize(window, ship_number = 1)
     @window = window
     #these are the vertices of the ship (top, left, right, bottom)
     @vert = {'t' => [320,230], 'l' => [310, 265], 'r' =>[330, 265], 'b' =>[320,260]}
+    @vert_2 = {'t' => [320,230], 'l' => [310, 265], 'r' =>[330, 265], 'b' =>[320,260]}
+    @particle_origin = [320,245]
+    @sonar_origin = [320,245]
     @offset = [0,0]
     @offset_counter = [0,0]
     @angle = 0
     @particle_array = []
+    @particle_array_2 = []
     @sonar_array = []
     @color = ColorPicker.color('ship_grey')
     sound_obj = Gosu::Sample.new(window, "media/engine2.wav")
@@ -23,17 +27,24 @@ class Ship
     @artifact_to_orbit = nil
     @orbit_speed = 0
     @orbit_angle = 0
+    @translation = 0
+    @particle_array_2 = []
+    
 
     create_particles
     create_sonar
     
   end
 
-  #make the engine particles that fly behind the ship
+  #make the engine particles that fly behind the ship, and make particles for second ship too
   def create_particles
     100.times do
       @particle = Particle.new(@window, self)
       @particle_array.push(@particle)
+    end
+    100.times do
+      @particle = Particle.new(@window, self)
+      @particle_array_2.push(@particle)
     end
   end
 
@@ -46,23 +57,24 @@ class Ship
 
   def update
     # update_offset
-    @particle_array.each do |p|
-      p.update_position
-    end
-
-    @sonar_array.each do |s|
-      s.update
-    end
-
-    @sonar_countdown -=1
-    if @sonar_countdown <= 0
+    if ![0,4].include?@window.game_state
       @sonar_array.each do |s|
-        s.reset
+        s.update
       end
-      @sonar_countdown = @sonar_countdown_max
-    end
 
-    update_ship_position
+      @sonar_countdown -=1
+      if @sonar_countdown <= 0
+        @sonar_array.each do |s|
+          s.reset
+        end
+        @sonar_countdown = @sonar_countdown_max
+      end
+
+      update_ship_position
+    else
+      @angle = 52
+      adjust_world_motion
+    end
   end
 
   def update_world_motion_relative_to_ship(left=false, right=false, up=false)
@@ -85,6 +97,14 @@ class Ship
         damp_motion("passive")
       end
 
+    end
+
+    #update particles
+    @particle_array.each do |p|
+      p.update_position(up)
+    end
+    @particle_array_2.each do |p|
+      p.update_position(up)
     end
 
   end
@@ -135,8 +155,8 @@ class Ship
     @location[0] += @velocity[0]
     @location[1] += @velocity[1]
 
-    @location[0] = @location[0]%WORLD_SIZE
-    @location[1] = @location[1]%WORLD_SIZE
+    # @location[0] = @location[0]%WORLD_SIZE
+    # @location[1] = @location[1]%WORLD_SIZE
   end
   
   def damp_motion(motion)
@@ -180,11 +200,6 @@ class Ship
   end
 
   def draw
-    #render engine particles
-    @particle_array.each do |p|
-      p.draw(@offset)
-    end
-
     #render sonar waves
     if @show_sonar
       @sonar_array.each do |s|
@@ -192,14 +207,168 @@ class Ship
       end
     end
     # 
+    if @window.is_gameplay_state?
+      
+      #render engine particles
+      @particle_array.each do |p|
+        p.draw(@offset)
+      end
+      draw_ship_1
+
+    else
+      
+      @window.translate(25,25){
+        @particle_array.each do |p|
+          p.draw(@offset)
+        end
+        draw_ship_1  
+        
+      }
+      @window.translate(-25,-25){
+        @particle_array_2.each do |p|
+          p.draw(@offset)
+        end
+        draw_ship_2
+      }
+    end
+
+    # draw_ship_2
+  end
+
+  def draw_ship_1
+        # draw_ship_2
     oX = @offset[0]
     oY = @offset[1]
+    cx = particle_origin[0]
+    cy = particle_origin[1]-9
     v = @vert
+    ship_grey = @color
+    ship_orange = ColorPicker.color('ship_orange')
+    b = ColorPicker.color('black')
+    dg = ColorPicker.color('dark_grey')
+    pb = ColorPicker.color('patch_brown')
+    pg = ColorPicker.color('patch_green')
+    
+    @window.rotate(@angle, particle_origin[0], particle_origin[1]){
+      
+      #left wing border
+      @window.draw_quad(
+        cx-6+oX, cy-12+oY, b,
+        cx-14+oX, cy-4+oY, b,
+        cx-16+oX, cy+14+oY, b,
+        cx-5+oX, cy+9+oY, b,
+        0
+      )
+      #right wing border
+      @window.draw_quad(
+        cx+6+oX, cy-12+oY, b,
+        cx+14+oX, cy-4+oY, b,
+        cx+16+oX, cy+14+oY, b,
+        cx+5+oX, cy+9+oY, b,
+        0
+      )
+      #center border
+      @window.draw_quad(
+        cx-6+oX, cy-12+oY, b,
+        cx+6+oX, cy-12+oY, b,
+        cx+5+oX, cy+9+oY, b,
+        cx-5+oX, cy+9+oY, b,
+        0
+      )
+
+      #left wing
+      @window.draw_quad(
+        cx-6+oX, cy-10+oY, ship_orange,
+        cx-12+oX, cy-3+oY, ship_orange,
+        cx-14+oX, cy+12+oY, ship_orange,
+        cx-5+oX, cy+7+oY, ship_orange,
+        0
+      )
+
+      #center_square
+      @window.draw_quad(
+        cx-6+oX, cy-10+oY, ship_orange,
+        cx+6+oX, cy-10+oY, ship_orange,
+        cx+5+oX, cy+7+oY, ship_orange,
+        cx-5+oX, cy+7+oY, ship_orange,
+        0
+      )
+
+      #right wing
+      @window.draw_quad(
+        cx+6+oX, cy-10+oY, ship_orange,
+        cx+12+oX, cy-3+oY, ship_orange,
+        cx+14+oX, cy+12+oY, ship_orange,
+        cx+5+oX, cy+7+oY, ship_orange,
+        0
+      )
+
+      #cockpit edge
+      @window.draw_quad(
+        cx-7+oX, cy-10+oY, b,
+        cx+7+oX, cy-10+oY, b,
+        cx+4+oX, cy-5+oY, b,
+        cx-4+oX, cy-5+oY, b,
+        0
+      )
+
+      #cockpit
+      @window.draw_quad(
+        cx-6+oX, cy-10+oY, dg,
+        cx+6+oX, cy-10+oY, dg,
+        cx+4+oX, cy-6+oY, dg,
+        cx-4+oX, cy-6+oY, dg,
+        0
+      )
+
+      #left patch edge
+      @window.draw_quad(
+        cx-13+oX, cy-2+oY, b,
+        cx-8+oX, cy-1+oY, b,
+        cx-8+oX, cy+4+oY, b,
+        cx-15+oX, cy+4+oY, b,
+        0
+      )
+
+      #left patch
+      @window.draw_quad(
+        cx-12+oX, cy-1+oY, pb,
+        cx-9+oX, cy+oY, pb,
+        cx-9+oX, cy+3+oY, pb,
+        cx-13+oX, cy+3+oY, pb,
+        0
+      )
+
+      #right patch edge
+      @window.draw_quad(
+        cx+14+oX, cy+2+oY, b,
+        cx+11+oX, cy+3+oY, b,
+        cx+11+oX, cy+8+oY, b,
+        cx+15+oX, cy+10+oY, b,
+        0
+      )
+
+      #right patch
+      @window.draw_quad(
+        cx+13+oX, cy+3+oY, pg,
+        cx+12+oX, cy+4+oY, pg,
+        cx+12+oX, cy+7+oY, pg,
+        cx+14+oX, cy+9+oY, pg,
+        0
+      )
+
+    }
+  end
+
+  def draw_ship_2
+    oX = @offset[0]
+    oY = @offset[1]
+    v = @vert_2
     ship_grey = @color
     white = ColorPicker.color('white')
     dark_grey = ColorPicker.color('dark_grey')
     
-    @window.rotate(@angle, @vert['b'][0], @vert['b'][1]){
+    @window.rotate(@angle, @vert_2['b'][0], @vert_2['b'][1]){
       #left border
       @window.draw_triangle(
         v['t'][0]+oX, v['t'][1]-2+oY, white,

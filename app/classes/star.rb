@@ -6,10 +6,10 @@ class Star
     @x = rand(640)
     @y = rand(480)
     @z = (rand(25)/10.0)+1
-    @size = ((rand(120)+1)/10.0)+0.5
+    @size = ((rand(150)+1)/10.0)+0.5
     @rot = rand(90)
     @dir = [-1,1][rand(2)]*rand(100)/500.0
-    @color = ColorPicker.color("white")
+    @color = ColorPicker.color("star_white")
     @color = ColorPicker.color('random') if @z < 1.1 && @size < 13
   end
 
@@ -43,7 +43,7 @@ class Star
     if @z < 1.1 && @size < 13
       @color = ColorPicker.color('random')
     else
-      @color = ColorPicker.color('white')
+      @color = ColorPicker.color('star_white')
     end
   end
 

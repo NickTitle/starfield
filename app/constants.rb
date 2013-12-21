@@ -1,10 +1,9 @@
-WINDOW_WIDTH = 800
-WINDOW_HEIGHT = 600
+WINDOW_WIDTH = 1200
+WINDOW_HEIGHT = 900
 WIDTH = 640
 HEIGHT = 480
 WORLD_SIZE = 5000.0
 DEBUG = false
-
 
 STORY = [
   ["It's all gone...                 ( press space )", true],               #0
@@ -27,7 +26,7 @@ STORY = [
   ["( press SPACE )", true],
   ["Each empty artifact is just one less place to look.", true],
   ["Did what happened to me happen here too?", false],
-  ["...and did what happened to me, happen to you?", true],                #20
+  ["...and did what happened to me, happen to you?", true],                 #20
   ["( press SPACE )", true],                                                  
   ["(tune with ',' and '.' )", false],
   ["Are you out there looking, too? Cause you're not here.", true],
@@ -37,8 +36,8 @@ STORY = [
   ["There's no one here, either.", true],
   ["( press SPACE )", true],
   ["Everything on this radio is terrible.", true],
-  ["It's still better than static, though.", false],
-  ["Dark windows. Yet another vacant artifact.", true],                #30
+  ["It's still better than static, though.", false],                        #30
+  ["Dark windows. Yet another vacant artifact.", true],                
   ["( press SPACE )", true],
   ["Am I really, truly, alone?", false],                
   ["I still hope one of these signals is yours.", true],
