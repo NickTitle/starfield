@@ -5,6 +5,7 @@ class Minimap
     @color = ColorPicker.color("map_background")
     @size = 100
     @offset = 10
+    @frame_width = 2
     @cycle_count = 0
     @should_draw_ship = true
   end
@@ -21,22 +22,42 @@ class Minimap
   def draw
     o = @offset
     s = @size
+    w = @frame_width
+    b = ColorPicker.color('black')
+    f = ColorPicker.color('grill_grey')
     c = @color
 
+
     @window.draw_quad(
-      o, o, c,
-      o+s, o, c,
-      o+s, o+s, c,
-      o, o+s, c,
+      o, o, f,
+      o+s+2*w, o, f,
+      o+s+2*w, o+s+2*w, f,
+      o, o+s+2*w, f,
       0
     )
+
+    @window.draw_quad(
+      o+w, o+w, b,
+      o+s+w, o+w, b,
+      o+s+w, o+s+w, b,
+      o+w, o+s+w, b,
+      0
+    )
+
+    # @window.draw_quad(
+    #   o, o, c,
+    #   o+s, o, c,
+    #   o+s, o+s, c,
+    #   o, o+s, c,
+    #   0
+    # )
 
     if @should_draw_ship
       c = ColorPicker.color("white")
       shipLoc = get_coords_for_position(@ship.location)
       
-      x = o+shipLoc[0]
-      y = o+shipLoc[1]
+      x = o+w+shipLoc[0]
+      y = o+w+shipLoc[1]
 
       @window.draw_quad(
         x, y, c,

@@ -10,7 +10,7 @@ class Star
     @rot = rand(90)
     @dir = [-1,1][rand(2)]*rand(100)/500.0
     @color = ColorPicker.color("star_white")
-    @color = ColorPicker.color('random') if @z < 1.1 && @size < 13
+    @color = ColorPicker.color('star_random') if @z < 1.1 && @size < 13
   end
 
   def update_position(world_motion)
@@ -41,7 +41,7 @@ class Star
     @size = ((rand(150)+1)/10.0)+0.5
     @rot = rand(90)
     if @z < 1.1 && @size < 13
-      @color = ColorPicker.color('random')
+      @color = ColorPicker.color('star_random')
     else
       @color = ColorPicker.color('star_white')
     end

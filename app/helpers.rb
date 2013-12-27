@@ -18,6 +18,8 @@ class ColorPicker
           color_string = 0xFFFFFFFF
         when "star_white"
           color_string = 0x66FFFFFF
+        when "star_random"
+          color_string = ("0x55" + (rand(0xFFFFFF).to_s(16).upcase)).to_i(16)
         when "black"
           color_string = 0xFF000000
         when "ship_grey"
@@ -27,7 +29,7 @@ class ColorPicker
         when "dark_grey"  
           color_string = 0xFF3E3E3E
         when "map_background"
-          color_string = 0x33FFFFFF
+          color_string = 0x88FFFFFF
         when "writer_background" 
           color_string = 0xBBFFFFFF
         when "grill_grey"
@@ -45,7 +47,7 @@ class ColorPicker
         when "patch_green"
           color_string = 0xFF2D940A
         when "random"
-          color_string = ("0xFF"+(rand(0xFFFFFF).to_s(16).upcase)).to_i(16)
+          color_string = ("0xFF" + (rand(0xFFFFFF).to_s(16).upcase)).to_i(16)
         when "full_reception"
           c = trans.to_s(16).upcase
           color_string = ("0x"+c+"FFFFCC").to_i(16)

@@ -216,7 +216,6 @@ class Ship
       draw_ship_1
 
     else
-      puts @window.game_state      
       @window.translate(25,25){
         @particle_array.each do |p|
           p.draw(@offset)

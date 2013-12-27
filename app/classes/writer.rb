@@ -20,15 +20,17 @@ class Writer
 
   def set_text=(text)
     @repeat = false
-    @text = text
     @scan = 0
+    @timer = 10
+    @text = text
+    
   end
 
   def update
     @timer -=1
     if @timer <=0
       @scan += 1
-      @type_sound[rand(3)].play(1,1, false) unless @repeat
+      @type_sound[rand(3)].play(1,1, false) unless (@repeat || @text.length == 0)
       @scan = 0 if @scan > @text.length
       
       if @scan == @text.length

@@ -8,7 +8,7 @@ class Artifact
     @tower_color = ColorPicker.color('random')
     @dir = rand(1)
     @dir = -1 if @dir == 0
-    mp3_pick = @@count%7+1
+    mp3_pick = @@count%8+1
     sound_obj = Gosu::Sample.new(window, "media/#{mp3_pick.to_s}.mp3")
     @broadcast = sound_obj.play(0,1,true)
     found_sound_obj = Gosu::Sample.new(window, "media/found_planet.mp3")

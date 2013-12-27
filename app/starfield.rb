@@ -41,6 +41,8 @@ class GameWindow < Gosu::Window
     @key_event_handler = KeyEventHandler.new(self)
     @last_story_update_time = Time.now
     @fade_back_in_timer == 0
+    @clock_time_to_fade_back_in = Time.now
+    @clock_time_to_go_black = Time.now
     @story_ending = false    
     @end_screen_transparency = 255
     @scale = WINDOW_WIDTH/(WIDTH*1.000)
@@ -56,6 +58,9 @@ class GameWindow < Gosu::Window
       @pause_for_story = false
     end
 
+    ## custom debug flags
+    # @game_state = 4
+    # @end_screen_transparency = 0
     
     create_stars
     create_artifacts
@@ -135,23 +140,30 @@ class GameWindow < Gosu::Window
     if @game_state == 0 && @end_screen_transparency > 0
       @end_screen_transparency -= 0.5
     elsif @game_state == 2 && @end_screen_transparency < 255
-      @end_screen_transparency += 0.7
+      @end_screen_transparency += 0.5
     elsif @game_state == 2 && @end_screen_transparency >= 255
       @pause_for_story = true
       @game_state = 3
+      @clock_time_to_fade_back_in = Time.now+25
+      @clock_time_to_go_black = Time.now+73
       @fade_back_in_timer = 240
+      end_sound = Gosu::Sample.new(self, "media/game_end.mp3")
+      end_sound.play(1,1,false)
     end
 
     update_finale unless(is_gameplay_state? || @game_state == 0)
-
   end
 
   def update_finale
-    if @game_state == 3 && @fade_back_in_timer > 0
-      @fade_back_in_timer -= 1
-    else
+    if @game_state == 3 && (@clock_time_to_fade_back_in > Time.now)
+      return
+    elsif @game_state == 3 && (@clock_time_to_fade_back_in <= Time.now)
       @game_state = 4 
-      @end_screen_transparency -= 0.7
+    elsif @game_state == 4 && @end_screen_transparency > 0
+      @end_screen_transparency -= 0.3
+    elsif @clock_time_to_go_black < Time.now && game_state == 4
+      @game_state = 5
+      @end_screen_transparency = 255
     end
   end
 
@@ -169,7 +181,7 @@ class GameWindow < Gosu::Window
 
       draw_for_gameplay
       @writer.draw_title if @game_state == 0
-      draw_fade_out if ([0,2,3,4].include?@game_state)
+      draw_fade_out if ([0,2,3,4,5].include?@game_state)
     }
   end
 
