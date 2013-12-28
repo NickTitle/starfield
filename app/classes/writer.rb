@@ -23,7 +23,7 @@ class Writer
     @scan = 0
     @timer = 10
     @text = text
-    
+
   end
 
   def update
@@ -32,7 +32,7 @@ class Writer
       @scan += 1
       @type_sound[rand(3)].play(1,1, false) unless (@repeat || @text.length == 0)
       @scan = 0 if @scan > @text.length
-      
+
       if @scan == @text.length
         @timer = 3*@post_scan_timer_checks
         @repeat = true
@@ -57,7 +57,7 @@ class Writer
 
   def draw_title
     @big_font.draw("Starfield", 18, 10, 0, 1, 1, ColorPicker.color('white'), :default)
-    
+
     if @window.end_screen_transparency == 0
       @font.draw("Press SPACE to begin", 225, 170, 0, 1, 1, ColorPicker.color('white'), :default)
     end

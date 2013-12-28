@@ -19,7 +19,7 @@ class Star
       reposition_star('x')
       @y%=480
     end
-    
+
     @x += -1*@ship.velocity[0]*@z
     if @x < 0 || @x > 640
       reposition_star('y')
@@ -62,8 +62,8 @@ class Star
         xmin, ymax, color,
         xmax, ymax, color,
         0
-      )  
+      )
     }
-    
+
   end
 end

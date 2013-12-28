@@ -12,7 +12,7 @@ class Minimap
 
   def update
     if @cycle_count >= 60
-      @should_draw_ship = !@should_draw_ship 
+      @should_draw_ship = !@should_draw_ship
       @cycle_count = 0
     else
       @cycle_count += 1
@@ -55,7 +55,7 @@ class Minimap
     if @should_draw_ship
       c = ColorPicker.color("white")
       shipLoc = get_coords_for_position(@ship.location)
-      
+
       x = o+w+shipLoc[0]
       y = o+w+shipLoc[1]
 

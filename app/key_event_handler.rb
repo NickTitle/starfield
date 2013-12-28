@@ -16,9 +16,9 @@ class KeyEventHandler
     @period = true if @w.button_down? Gosu::KbPeriod
 
     case @w.pause_for_story
-      
+
       when true
-        #key bindings for story-critical moments  
+        #key bindings for story-critical moments
         window_key_bindings_for_story
 
         radio_bindings_for_story(@w.radio)
@@ -58,7 +58,7 @@ class KeyEventHandler
   def radio_bindings_non_story(r)
     if @w.button_down? Gosu::KbComma
         r.radio_offset -= 0.5 unless r.radio_offset < 0.5
-        
+
         # special case to start ending the game
         if @w.story_state == 59 && r.radio_offset == 0
           @w.update_story
@@ -71,9 +71,9 @@ class KeyEventHandler
   end
 
   def ship_bindings_for_story(s) #s = ship
-    
+
     s.update_world_motion_relative_to_ship
-    
+
     # turn off artifacts if the conditions are right
     if (ARTIFACT_CUES.include?@w.story_state) && (@w.button_down? Gosu::KbSpace)
       return if Time.now - @w.last_story_update_time < 1
@@ -91,7 +91,7 @@ class KeyEventHandler
     unless [0,4].include?@w.game_state
       s.update_world_motion_relative_to_ship(@left,@right,@up)
     end
-    
+
     # if there's an artifact in front of you, and it's not in the story, shut it down!
     if @space && s.artifact_to_shut_down != nil
       s.artifact_to_shut_down.found = true
