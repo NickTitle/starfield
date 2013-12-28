@@ -1,23 +1,23 @@
 class Radio
   attr_accessor :radio_offset
   def initialize(window, ship, artifacts)
-    
+
     @window = window
     @ship = ship
     @artifact_array = artifacts
     @radio_offset = 0
-    
+
     static_sound_object = Gosu::Sample.new(window, "media/static.mp3")
     @static = static_sound_object.play(0,1,true)
-    
+
     power_button_sound_object = Gosu::Sample.new(window, "media/button.mp3")
     @power_button = power_button_sound_object
-    
+
     @reception_color = ColorPicker.color('white')
     @black = ColorPicker.color('black')
     @radio_grey = ColorPicker.color('radio_grey')
     @white = ColorPicker.color('white')
-    
+
     @broadcast_range = 8
     @state = "off"
 
@@ -39,7 +39,7 @@ class Radio
         @power_button.play(1,1,false)
         @state = "off"
       end
-      
+
       return
     else
 
@@ -62,7 +62,7 @@ class Radio
 
   def find_artifacts_in_broadcast_range
     broadcasting_artifacts = []
-  
+
     @artifact_array.each do |a|
       signal_closeness = (@radio_offset-a.frequency).abs
       signal_strength = @broadcast_range - signal_closeness
@@ -83,7 +83,7 @@ class Radio
       artifacts.each do |a|
         # artifact in question
         aIQ = a[0]
-        
+
         signal_component = (0.6-0.6*((@broadcast_range-a[2])/(@broadcast_range)))
         distance_component = (0.45-0.45*(a[1]/(WORLD_SIZE)))
         broadcast_volume = (signal_component + distance_component)
@@ -91,7 +91,7 @@ class Radio
 
         # let closest artifact set volumes, control sonar, etc
         if a == artifacts.first
-          
+
           ## STORY CODE
           @window.update_story if @window.story_state == 4
           ## END STORY CODE
@@ -105,7 +105,7 @@ class Radio
           # if it's less than half a screen, put the ship in orbit
           if a[1] < HEIGHT/2 && a[1] < WIDTH/2
             react_to_close_artifact(aIQ)
-          else    
+          else
 
             @static.volume = (1-broadcast_volume) * 0.75
             @ship.artifact_to_shut_down = nil unless @window.pause_for_story
@@ -127,12 +127,12 @@ class Radio
   def react_to_close_artifact(aIQ)
     @static.volume = 0
     @ship.artifact_to_shut_down = aIQ
-    
+
     ### STORY CODE
     # find out if you're supposed to advance the story upon reaching this artifact
     if RADIO_CUES.include?@window.story_state
       @window.update_story unless DEBUG
-    end 
+    end
     # if @window.pause_for_story
     #   wM = @window.world_motion
     #   wM[0] *= 0.95
@@ -263,7 +263,7 @@ class Radio
     else
       on_off_color = ColorPicker.color('radio_grey')
     end
-    draw_octagon(@window, x+2, y+2, size-4, on_off_color) 
+    draw_octagon(@window, x+2, y+2, size-4, on_off_color)
   end
 
   def draw_tuner
@@ -275,7 +275,7 @@ class Radio
     dial = ColorPicker.color("dial_orange")
     @window.rotate((@radio_offset/275.0 * 180), x+s/2, y+s/2){
       draw_octagon(@window,x-1,y-1,s+2, dark_grey)
-      draw_octagon(@window,x,y,s, white)    
+      draw_octagon(@window,x,y,s, white)
       draw_octagon(@window,x-8,y+4, s/4, dial)
     }
     @window.draw_quad(
@@ -304,13 +304,13 @@ class Radio
     left_knob_rotate = (@radio_offset > 0) ? 45 : 0
     @window.rotate(left_knob_rotate, x+s/2, y+s/2){
       draw_octagon(@window,x-1,y-1,s+2, black)
-      draw_octagon(@window,x,y,s, white)    
+      draw_octagon(@window,x,y,s, white)
       draw_octagon(@window,x+1,y, 2, dial)
     }
     x = 109
     @window.rotate(720*@radio_offset/275, x+s/2, y+s/2){
       draw_octagon(@window,x-1,y-1,s+2, black)
-      draw_octagon(@window,x,y,s, white)    
+      draw_octagon(@window,x,y,s, white)
       draw_octagon(@window,x-1, y+3, 2, dial)
     }
   end

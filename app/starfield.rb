@@ -43,7 +43,7 @@ class GameWindow < Gosu::Window
     @fade_back_in_timer == 0
     @clock_time_to_fade_back_in = Time.now
     @clock_time_to_go_black = Time.now
-    @story_ending = false    
+    @story_ending = false
     @end_screen_transparency = 255
     @scale = WINDOW_WIDTH/(WIDTH*1.000)
     @space_blue = ColorPicker.color('space')
@@ -61,7 +61,7 @@ class GameWindow < Gosu::Window
     ## custom debug flags
     # @game_state = 4
     # @end_screen_transparency = 0
-    
+
     create_stars
     create_artifacts
 
@@ -98,7 +98,7 @@ class GameWindow < Gosu::Window
     @star_array.each do |star|
       star.update_position(@world_motion)
     end
-    
+
     update_artifacts_in_range
 
     @ship.update
@@ -158,7 +158,7 @@ class GameWindow < Gosu::Window
     if @game_state == 3 && (@clock_time_to_fade_back_in > Time.now)
       return
     elsif @game_state == 3 && (@clock_time_to_fade_back_in <= Time.now)
-      @game_state = 4 
+      @game_state = 4
     elsif @game_state == 4 && @end_screen_transparency > 0
       @end_screen_transparency -= 0.3
     elsif @clock_time_to_go_black < Time.now && game_state == 4

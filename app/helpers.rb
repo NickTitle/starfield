@@ -26,11 +26,11 @@ class ColorPicker
           color_string = 0xFF6E6E6E
         when "radio_grey"
           color_string = 0xFF8E8E8E
-        when "dark_grey"  
+        when "dark_grey"
           color_string = 0xFF3E3E3E
         when "map_background"
           color_string = 0x88FFFFFF
-        when "writer_background" 
+        when "writer_background"
           color_string = 0xBBFFFFFF
         when "grill_grey"
           color_string = 0xFFEBEBEB
