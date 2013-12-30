@@ -50,7 +50,7 @@ class GameWindow < Gosu::Window
 
 
     if !DEBUG
-      @story_state = 0#57#
+      @story_state = 0
       @pause_for_story = true
     else
       @game_state = 1
@@ -59,6 +59,7 @@ class GameWindow < Gosu::Window
     end
 
     ## custom debug flags
+    # @story_state = 57
     # @game_state = 4
     # @end_screen_transparency = 0
     

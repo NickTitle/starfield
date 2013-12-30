@@ -11,7 +11,7 @@ STORY = [
   ["... and it's been weeks since I touched these controls.", true],
   ["If I'm gonna find anyone, I need to start looking.", true],
   ['Just turn the radio on.          ( press "." )', true],
-  ["Wait, this isn't just static! ( tune with ',' and '.' )", true],
+  ["Wait, this isn't just static! ( tune with '.' )", true],
   ["There must be someone out there...", true],
   ["...somewhere.", true],
   ["How did you escape, whoever you are? (press <, ^, > )" , false],
