@@ -12,10 +12,10 @@ class SonarBar
     @center = @ship.sonar_origin
     @x = @center[0]
     @y = @center[1]
-    
+
   end
 
-  def reset 
+  def reset
     @x = @center[0]
     @y = @center[1]
     @width = 2

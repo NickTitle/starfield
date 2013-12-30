@@ -28,7 +28,7 @@ STORY = [
   ["Each empty artifact is just one less place to look.", true],
   ["Did what happened to me happen here too?", false],
   ["...and did what happened to me, happen to you?", true],                 #20
-  ["( press SPACE )", true],                                                  
+  ["( press SPACE )", true],
   ["(tune with ',' and '.' )", false],
   ["Are you out there looking, too? Cause you're not here.", true],
   ["( press SPACE )", true],
@@ -38,9 +38,9 @@ STORY = [
   ["( press SPACE )", true],
   ["Everything on this radio is terrible.", true],
   ["It's still better than static, though.", false],                        #30
-  ["Dark windows. Yet another vacant artifact.", true],                
+  ["Dark windows. Yet another vacant artifact.", true],
   ["( press SPACE )", true],
-  ["Am I really, truly, alone?", false],                
+  ["Am I really, truly, alone?", false],
   ["I still hope one of these signals is yours.", true],
   ["Are you broadcasting too?", true],
   ["( press SPACE )", true],

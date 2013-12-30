@@ -62,14 +62,14 @@ class Artifact
     s = @size
     l[0]+= (WIDTH/2 - @window.ship.location[0])-s/2
     l[1]+= (HEIGHT/2 - @window.ship.location[1])-s/2
-    
+
     c = @color
-    
+
     return if @flicker_draw == false
     @window.rotate(@rot, l[0]+s/2,l[1]+s/2){
       draw_octagon(@window,l[0], l[1],s, color)
       draw_tower(l,s,c)
-    }    
+    }
   end
 
   def draw_tower(l,s,c)
@@ -124,7 +124,7 @@ class Artifact
       0
     )
 
-    
+
     x = l[0]+s*7/32
     y = l[1]+s*3/64
     w = s/6
@@ -155,7 +155,7 @@ class Artifact
       x+w-rd, y+h*1/4, c1,
       x+w-2*rd, y+h*1/4, c1,
       0
-    )    
+    )
 
     #window
     @window.draw_quad(
@@ -164,7 +164,7 @@ class Artifact
       x+2*rd, y+h/2, b,
       x+rd, y+h/2, b,
       0
-    ) 
+    )
 
     draw_octagon(@window, s+l[0]-s/2-s/10,l[1]-s*3/4-s/10, s/5, c)
   end

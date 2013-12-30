@@ -29,11 +29,11 @@ class Ship
     @orbit_angle = 0
     @translation = 0
     @particle_array_2 = []
-    
+
 
     create_particles
     create_sonar
-    
+
   end
 
   #make the engine particles that fly behind the ship, and make particles for second ship too
@@ -90,7 +90,7 @@ class Ship
       damp_motion("active")
     else
       adjust_engine_volume("down")
-      
+
       if @artifact_to_shut_down && !(left || right || up)
         adjust_for_orbit
       else
@@ -126,7 +126,7 @@ class Ship
 
     @velocity[0] += (sLoc[0] > aLoc[0]) ? -scalar : scalar
     @velocity[1] += (sLoc[1] > aLoc[1]) ? -scalar : scalar
-    
+
 
     calc_angle = Math.atan2(@velocity[1], @velocity[0]) * 180/ Math::PI
     calc_angle += 360 if calc_angle < 0
@@ -158,7 +158,7 @@ class Ship
     # @location[0] = @location[0]%WORLD_SIZE
     # @location[1] = @location[1]%WORLD_SIZE
   end
-  
+
   def damp_motion(motion)
     wM = @window.world_motion
 
@@ -206,7 +206,7 @@ class Ship
         s.draw
       end
     end
-    # 
+    #
     if @window.is_gameplay_state? || @window.game_state == 0
 
       #render engine particles
@@ -220,8 +220,8 @@ class Ship
         @particle_array.each do |p|
           p.draw(@offset)
         end
-        draw_ship_1  
-        
+        draw_ship_1
+
       }
       @window.translate(-25,-25){
         @particle_array_2.each do |p|
@@ -247,9 +247,9 @@ class Ship
     dg = ColorPicker.color('dark_grey')
     pb = ColorPicker.color('patch_brown')
     pg = ColorPicker.color('patch_green')
-    
+
     @window.rotate(@angle, particle_origin[0], particle_origin[1]){
-      
+
       #left wing border
       @window.draw_quad(
         cx-6+oX, cy-12+oY, b,
@@ -366,7 +366,7 @@ class Ship
     ship_grey = @color
     white = ColorPicker.color('white')
     dark_grey = ColorPicker.color('dark_grey')
-    
+
     @window.rotate(@angle, @vert_2['b'][0], @vert_2['b'][1]){
       #left border
       @window.draw_triangle(
