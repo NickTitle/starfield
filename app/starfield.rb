@@ -194,7 +194,7 @@ class GameWindow < Gosu::Window
 
       #flat layer, with artifacts and the ship
     @artifact_array.each do |a|
-      a.draw unless !(a.should_draw && a.visible_on_map)
+      a.draw if distance(a.location, @ship.location)<1.5*WIDTH#unless !(a.should_draw && a.visible_on_map)
     end
 
     @ship.draw

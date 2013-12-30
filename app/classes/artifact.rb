@@ -1,6 +1,7 @@
 class Artifact
   @@count = 0
   attr_accessor :location, :frequency, :broadcast, :found, :color, :should_draw, :visible_on_map
+  attr_reader :turned_off
   def initialize(window)
     @@count += 1
     @window = window
@@ -8,7 +9,7 @@ class Artifact
     @tower_color = ColorPicker.color('random')
     @dir = rand(1)
     @dir = -1 if @dir == 0
-    mp3_pick = @@count%8+1
+    mp3_pick = @@count%8
     sound_obj = Gosu::Sample.new(window, "media/#{mp3_pick.to_s}.mp3")
     @broadcast = sound_obj.play(0,1,true)
     found_sound_obj = Gosu::Sample.new(window, "media/found_planet.mp3")
@@ -23,6 +24,7 @@ class Artifact
     @max_cycles_till_turned_off = 150+rand(60)
     @cycles_till_turned_off = @max_cycles_till_turned_off
     @flicker_draw = true
+    @turned_off = false
 
     if DEBUG
       @rot = 0
@@ -37,14 +39,18 @@ class Artifact
 
   def update
 
-    if @found == true
+    if @found == true && @turned_off == false
       @tower_color = ColorPicker.color('random')
       @color = ColorPicker.color('random')
       @found_sound.play(1,1,false) unless @cycles_till_turned_off < @max_cycles_till_turned_off
       @cycles_till_turned_off -=1
       if @cycles_till_turned_off == 0
-        @window.ship.artifact_to_shut_down = nil
-        @window.artifact_array.delete(self)
+        # @window.ship.artifact_to_shut_down = nil
+        # @window.artifact_array.delete(self)
+        @turned_off = true
+        @flicker_draw = true
+        @color = ColorPicker.color('random_grey')
+        @tower_color = ColorPicker.color('random_grey')
         @window.update_story unless DEBUG
         @@count-=1
         return
@@ -168,4 +174,5 @@ class Artifact
 
     draw_octagon(@window, s+l[0]-s/2-s/10,l[1]-s*3/4-s/10, s/5, c)
   end
+
 end

@@ -66,7 +66,7 @@ class Radio
     @artifact_array.each do |a|
       signal_closeness = (@radio_offset-a.frequency).abs
       signal_strength = @broadcast_range - signal_closeness
-      if signal_closeness < @broadcast_range &&  broadcasting_artifacts.length < 2
+      if signal_closeness < @broadcast_range &&  broadcasting_artifacts.length < 2 && !a.turned_off
         broadcasting_artifacts.push([a,distance(@ship.location, a.location), signal_strength])
       else
         a.broadcast.volume = 0
@@ -91,6 +91,7 @@ class Radio
 
         # let closest artifact set volumes, control sonar, etc
         if a == artifacts.first
+
 
           ## STORY CODE
           @window.update_story if @window.story_state == 4

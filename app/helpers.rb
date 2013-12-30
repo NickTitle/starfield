@@ -19,7 +19,7 @@ class ColorPicker
         when "star_white"
           color_hex_value = 0x66FFFFFF
         when "star_random"
-          color_hex_value = ("0x55" + (rand(0xFFFFFF).to_s(16).upcase)).to_i(16)
+          color_hex_value = ("0x55" + rand_hex_rgb).to_i(16)
         when "black"
           color_hex_value = 0xFF000000
         when "ship_grey"
@@ -47,7 +47,12 @@ class ColorPicker
         when "patch_green"
           color_hex_value = 0xFF2D940A
         when "random"
-          color_hex_value = ("0xFF" + (rand(0xFFFFFF).to_s(16).upcase)).to_i(16)
+          color_hex_value = ("0xFF" + rand_hex_rgb).to_i(16)
+        when "random_grey"
+          grey_seed_1 = rand(0xF).to_s(16)
+          grey_seed_2 = rand(0xF).to_s(16)
+          grey_seed = grey_seed_1 + grey_seed_2
+          color_hex_value = ("0xFF" + grey_seed + grey_seed + grey_seed).to_i(16)
         when "full_reception"
           c = trans.to_s(16).upcase
           color_hex_value = ("0x"+c+"FFFFCC").to_i(16)
@@ -59,9 +64,17 @@ class ColorPicker
           color_hex_value = ("0x"+c+"000000").to_i(16)
         end
 
-
       Gosu::Color.new(color_hex_value)
     end
+end
+
+def rand_hex_rgb
+  hex_string = ""
+  6.times do
+    hex = rand(0xf).to_s(16)
+    hex_string << hex
+  end
+  hex_string
 end
 
 def distance(a,b)

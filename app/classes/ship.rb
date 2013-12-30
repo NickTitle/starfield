@@ -28,7 +28,6 @@ class Ship
     @orbit_speed = 0
     @orbit_angle = 0
     @translation = 0
-    @particle_array_2 = []
 
 
     create_particles
@@ -50,7 +49,7 @@ class Ship
 
   def create_sonar
     10.times do
-      @sonar = SonarBar.new(@window, self, 0)
+      @sonar = SonarBar.new(@window, self.sonar_origin, 0)
       @sonar_array.push(@sonar)
     end
   end

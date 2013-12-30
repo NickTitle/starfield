@@ -1,15 +1,15 @@
 
 class SonarBar
   attr_accessor :next_angle
-  def initialize(window, ship, angle)
+  def initialize(window, center, angle)
     @window = window
-    @ship = ship
     @speed = 5
     @angle = angle
     @next_angle = 0
     @width = 2
+    @angle_spread = 60
     @trans = 0
-    @center = @ship.sonar_origin
+    @center = center
     @x = @center[0]
     @y = @center[1]
 
@@ -38,7 +38,7 @@ class SonarBar
     w = @width
     c = ColorPicker.color('sonar', @trans.round)
 
-    @window.rotate(@angle+rand(60)-30+90, @center[0], @center[1]) {
+    @window.rotate(@angle+rand(@angle_spread)-@angle_spread/2+90, @center[0], @center[1]) {
       @window.draw_quad(
         x-w/2, y, c,
         x-w/2, y+4, c,
