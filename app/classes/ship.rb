@@ -15,8 +15,16 @@ class Ship
     @particle_array_2 = []
     @sonar_array = []
     @color = ColorPicker.color('ship_grey')
-    sound_obj = Gosu::Sample.new(window, "media/engine2.wav")
-    @engine_sound = sound_obj.play(0,1,true)
+    
+    engine_sound_obj = Gosu::Sample.new(window, "media/sfx/engine3.mp3")
+    @engine_sound = engine_sound_obj.play(0,1,true)
+    
+    engine_off_obj = Gosu::Sample.new(window, "media/sfx/engine_turn_off.mp3")
+    @engine_off = engine_off_obj
+    
+    engine_on_obj = Gosu::Sample.new(window, "media/sfx/engine_turn_on.mp3")
+    @engine_on = engine_on_obj
+    
     @current_engine_volume = 0
     @location = [WORLD_SIZE/2+rand(100), WORLD_SIZE/2+rand(100)]
     @velocity = [0,0]
@@ -187,6 +195,15 @@ class Ship
       end
   end
 
+  def play_engine_sound(whichSound)
+    case whichSound
+      when "off"
+        @engine_off.play(1,1,false)
+      when "on"
+        @engine_on.play(1,1,false)
+    end
+  end
+
   #unused currently, can move ship relative to the viewport
   def update_offset
     @offset_counter[1] += 0.01
@@ -234,7 +251,7 @@ class Ship
   end
 
   def draw_ship_1
-        # draw_ship_2
+    # draw_ship_2
     oX = @offset[0]
     oY = @offset[1]
     cx = particle_origin[0]
@@ -354,7 +371,6 @@ class Ship
         cx+14+oX, cy+9+oY, pg,
         0
       )
-
     }
   end
 

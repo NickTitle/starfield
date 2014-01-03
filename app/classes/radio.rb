@@ -7,10 +7,10 @@ class Radio
     @artifact_array = artifacts
     @radio_offset = 0
 
-    static_sound_object = Gosu::Sample.new(window, "media/static.mp3")
+    static_sound_object = Gosu::Sample.new(window, "media/sfx/static.mp3")
     @static = static_sound_object.play(0,1,true)
 
-    power_button_sound_object = Gosu::Sample.new(window, "media/button.mp3")
+    power_button_sound_object = Gosu::Sample.new(window, "media/sfx/button.mp3")
     @power_button = power_button_sound_object
 
     @reception_color = ColorPicker.color('white')
@@ -94,7 +94,10 @@ class Radio
 
 
           ## STORY CODE
-          @window.update_story if @window.story_state == 4
+          if @window.story_state == 4
+            @window.update_story
+
+          end
           ## END STORY CODE
 
           scaled_volume = (255*broadcast_volume).round
@@ -133,6 +136,7 @@ class Radio
     # find out if you're supposed to advance the story upon reaching this artifact
     if RADIO_CUES.include?@window.story_state
       @window.update_story unless DEBUG
+      @ship.play_engine_sound('off')
     end
     # if @window.pause_for_story
     #   wM = @window.world_motion

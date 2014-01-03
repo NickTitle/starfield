@@ -5,9 +5,9 @@ class Writer
     @font = Gosu::Font.new(window, "media/04B03.TTF", 18)
     @big_font = Gosu::Font.new(window, "media/04B03.TTF", 165)
     @text = ""
-    type_sound_1 = Gosu::Sample.new(window, "./media/type1.mp3")
-    type_sound_2 = Gosu::Sample.new(window, "./media/type2.mp3")
-    type_sound_3 = Gosu::Sample.new(window, "./media/type3.mp3")
+    type_sound_1 = Gosu::Sample.new(window, "./media/sfx/type1.mp3")
+    type_sound_2 = Gosu::Sample.new(window, "./media/sfx/type2.mp3")
+    type_sound_3 = Gosu::Sample.new(window, "./media/sfx/type3.mp3")
     @type_sound = [type_sound_1, type_sound_2, type_sound_3]
     @scan = 1
     @post_scan_timer_checks = 60

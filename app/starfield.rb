@@ -29,6 +29,7 @@ class GameWindow < Gosu::Window
     #2= fadeout
     #3= pause after fadeout
     #4= fadein
+    
     @game_state = 0
 
     @black = Gosu::Color.new(0xFF000000)
@@ -148,7 +149,7 @@ class GameWindow < Gosu::Window
       @clock_time_to_fade_back_in = Time.now+25
       @clock_time_to_go_black = Time.now+73
       @fade_back_in_timer = 240
-      end_sound = Gosu::Sample.new(self, "media/game_end.mp3")
+      end_sound = Gosu::Sample.new(self, "media/songs/game_end.mp3")
       end_sound.play(1,1,false)
     end
 
@@ -193,8 +194,10 @@ class GameWindow < Gosu::Window
     end
 
       #flat layer, with artifacts and the ship
-    @artifact_array.each do |a|
-      a.draw if distance(a.location, @ship.location)<1.5*WIDTH#unless !(a.should_draw && a.visible_on_map)
+    if is_gameplay_state?
+      @artifact_array.each do |a|
+        a.draw if distance(a.location, @ship.location)<1.5*WIDTH#unless !(a.should_draw && a.visible_on_map)
+      end
     end
 
     @ship.draw

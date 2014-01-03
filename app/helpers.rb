@@ -20,6 +20,8 @@ class ColorPicker
           color_hex_value = 0x66FFFFFF
         when "star_random"
           color_hex_value = ("0x55" + rand_hex_rgb).to_i(16)
+        when "star_black"
+          color_hex_value = 0x55000000
         when "black"
           color_hex_value = 0xFF000000
         when "ship_grey"

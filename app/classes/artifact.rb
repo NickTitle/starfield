@@ -9,10 +9,10 @@ class Artifact
     @tower_color = ColorPicker.color('random')
     @dir = rand(1)
     @dir = -1 if @dir == 0
-    mp3_pick = @@count%8
-    sound_obj = Gosu::Sample.new(window, "media/#{mp3_pick.to_s}.mp3")
+    mp3_pick = @@count%10 + 1
+    sound_obj = Gosu::Sample.new(window, "media/songs/#{mp3_pick.to_s}.mp3")
     @broadcast = sound_obj.play(0,1,true)
-    found_sound_obj = Gosu::Sample.new(window, "media/found_planet.mp3")
+    found_sound_obj = Gosu::Sample.new(window, "media/sfx/found_planet.mp3")
     @found_sound = found_sound_obj
     @visible_on_map = false
     @size_limits = [150+rand(25),400+rand(25)]
@@ -51,6 +51,9 @@ class Artifact
         @flicker_draw = true
         @color = ColorPicker.color('random_grey')
         @tower_color = ColorPicker.color('random_grey')
+
+        @window.ship.play_engine_sound('off')
+        
         @window.update_story unless DEBUG
         @@count-=1
         return

@@ -11,6 +11,7 @@ class Star
     @dir = [-1,1][rand(2)]*rand(100)/500.0
     @color = ColorPicker.color("star_white")
     @color = ColorPicker.color('star_random') if @z < 1.1 && @size < 13
+    @border = ColorPicker.color('star_black')
   end
 
   def update_position(world_motion)
@@ -55,7 +56,15 @@ class Star
     ymax = @y+@size/2
     s = @size
     color = @color
+    b = @border
     @window.rotate(@rot, @x, @y){
+      @window.draw_quad(
+        xmin-1, ymin-1, b,
+        xmax+1, ymin-1, b,
+        xmin-1, ymax+1, b,
+        xmax+1, ymax+1, b,
+        0
+      )
       @window.draw_quad(
         xmin, ymin, color,
         xmax, ymin, color,
