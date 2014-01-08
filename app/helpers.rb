@@ -48,6 +48,8 @@ class ColorPicker
           color_hex_value = 0xFF322611
         when "patch_green"
           color_hex_value = 0xFF2D940A
+        when "ship_peach"
+          color_hex_value = 0xFFF5D04C
         when "random"
           color_hex_value = ("0xFF" + rand_hex_rgb).to_i(16)
         when "random_grey"

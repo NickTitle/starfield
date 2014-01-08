@@ -246,12 +246,9 @@ class Ship
         draw_ship_2
       }
     end
-
-    # draw_ship_2
   end
 
   def draw_ship_1
-    # draw_ship_2
     oX = @offset[0]
     oY = @offset[1]
     cx = particle_origin[0]
@@ -379,46 +376,150 @@ class Ship
     oY = @offset[1]
     v = @vert_2
     ship_grey = @color
-    white = ColorPicker.color('white')
-    dark_grey = ColorPicker.color('dark_grey')
+    w = ColorPicker.color('white')
+    sp = ColorPicker.color('ship_peach')
+    b = ColorPicker.color('black')
+    dg = ColorPicker.color('dark_grey')
 
-    @window.rotate(@angle, @vert_2['b'][0], @vert_2['b'][1]){
-      #left border
-      @window.draw_triangle(
-        v['t'][0]+oX, v['t'][1]-2+oY, white,
-        v['l'][0]-1+oX, v['l'][1]+1+oY, white,
-        v['b'][0]+oX, v['b'][1]+oY, white,
-        0
-      )
-      #right border
-      @window.draw_triangle(
-        v['t'][0]+oX, v['t'][1]-2+oY, white,
-        v['r'][0]+1+oX, v['r'][1]+1+oY, white,
-        v['b'][0]+oX, v['b'][1]+oY, white,
-        0
-      )
-      #left body
-      @window.draw_triangle(
-        v['t'][0]+oX, v['t'][1]+oY, ship_grey,
-        v['l'][0]+oX, v['l'][1]+oY, ship_grey,
-        v['b'][0]+oX, v['b'][1]+oY, ship_grey,
-        0
-      )
-      #right body
-      @window.draw_triangle(
-        v['t'][0]+oX, v['t'][1]+oY, ship_grey,
-        v['r'][0]+oX, v['r'][1]+oY, ship_grey,
-        v['b'][0]+oX, v['b'][1]+oY, ship_grey,
-        0
-      )
-      #center cockpit
+    @window.rotate(@angle, particle_origin[0], particle_origin[1]){
+
+      #point border 
       @window.draw_quad(
-        v['b'][0]-3+oX, v['b'][1]-6+oY, dark_grey,
-        v['b'][0]+3+oX, v['b'][1]-6+oY, dark_grey,
-        v['b'][0]+5+oX, v['b'][1]-2+oY, dark_grey,
-        v['b'][0]-5+oX, v['b'][1]-2+oY, dark_grey,
+        v['t'][0]+oX-5, v['t'][1]+oY-5, b,
+        v['t'][0]+oX-3, v['t'][1]+oY-7, b,
+        v['t'][0]+oX+3, v['t'][1]+oY-7, b,
+        v['t'][0]+oX+5, v['t'][1]+oY-5, b,
         0
       )
+      
+      #top border
+      @window.draw_quad(
+        v['t'][0]+oX-7, v['t'][1]+oY+3, b,
+        v['t'][0]+oX-5, v['t'][1]+oY-5, b,
+        v['t'][0]+oX+5, v['t'][1]+oY-5, b,
+        v['t'][0]+oX+7, v['t'][1]+oY+3, b,
+        0
+      )
+
+      #antenna border
+
+      @window.draw_triangle(
+        v['t'][0]+oX-3, v['t'][1]+oY-7, b,
+        v['t'][0]+oX, v['t'][1]+oY-12, b,
+        v['t'][0]+oX+3, v['t'][1]+oY-7, b,
+        0
+      )
+
+      #point  
+      @window.draw_quad(
+        v['t'][0]+oX-3, v['t'][1]+oY-4, sp,
+        v['t'][0]-oX, v['t'][1]+oY-6, sp,
+        v['t'][0]+oX, v['t'][1]+oY-6, sp,
+        v['t'][0]+oX+3, v['t'][1]+oY-4, sp,
+        0
+      )
+      
+      #top section
+      @window.draw_quad(
+        v['t'][0]+oX-5, v['t'][1]+oY+1, sp,
+        v['t'][0]+oX-3, v['t'][1]+oY-4, sp,
+        v['t'][0]+oX+3, v['t'][1]+oY-4, sp,
+        v['t'][0]+oX+5, v['t'][1]+oY+1, sp,
+        0
+      )
+
+      #antenna
+      @window.draw_triangle(
+        v['t'][0]+oX-0.25, v['t'][1]+oY-6, w,
+        v['t'][0]+oX, v['t'][1]+oY-11, w,
+        v['t'][0]+oX+0.25, v['t'][1]+oY-6, w,
+        0
+      )
+
+      #center border
+      @window.draw_quad(
+        v['t'][0]+oX-6, v['t'][1]+oY+3, b,
+        v['t'][0]+oX-4, v['t'][1]+oY+18, b,
+        v['t'][0]+oX+4, v['t'][1]+oY+18, b,
+        v['t'][0]+oX+6, v['t'][1]+oY+3, b,
+        0
+      )
+      #center section
+      @window.draw_quad(
+        v['t'][0]+oX-5, v['t'][1]+oY+1, sp,
+        v['t'][0]+oX-2, v['t'][1]+oY+16, sp,
+        v['t'][0]+oX+2, v['t'][1]+oY+16, sp,
+        v['t'][0]+oX+5, v['t'][1]+oY+1, sp,
+        0
+      )
+      #left fin border
+      @window.draw_quad(
+        v['t'][0]+oX-5, v['t'][1]+oY+10, b,
+        v['t'][0]+oX-7, v['t'][1]+oY+13, b,
+        v['t'][0]+oX-7, v['t'][1]+oY+19, b,
+        v['t'][0]+oX-4, v['t'][1]+oY+15, b,
+        0
+      )
+      #left fin
+      @window.draw_quad(
+        v['t'][0]+oX-3, v['t'][1]+oY+9, sp,
+        v['t'][0]+oX-6, v['t'][1]+oY+13, sp,
+        v['t'][0]+oX-6, v['t'][1]+oY+18, sp,
+        v['t'][0]+oX-2, v['t'][1]+oY+13, sp,
+        0
+      )
+
+      #right fin border
+      @window.draw_quad(
+        v['t'][0]+oX+5, v['t'][1]+oY+10, b,
+        v['t'][0]+oX+7, v['t'][1]+oY+13, b,
+        v['t'][0]+oX+7, v['t'][1]+oY+19, b,
+        v['t'][0]+oX+4, v['t'][1]+oY+15, b,
+        0
+      )
+      #right fin
+      @window.draw_quad(
+        v['t'][0]+oX+3, v['t'][1]+oY+9, sp,
+        v['t'][0]+oX+6, v['t'][1]+oY+13, sp,
+        v['t'][0]+oX+6, v['t'][1]+oY+18, sp,
+        v['t'][0]+oX+2, v['t'][1]+oY+13, sp,
+        0
+      )
+      #window border
+      draw_octagon(@window, v['t'][0]+oX-2,v['t'][1]-2+oY,4,b)
+
+      #window
+      draw_octagon(@window, v['t'][0]+oX-1,v['t'][1]-1+oY,2,dg)
+
+      #right border
+      # @window.draw_triangle(
+      #   v['t'][0]+oX, v['t'][1]-2+oY, white,
+      #   v['r'][0]+1+oX, v['r'][1]+1+oY, white,
+      #   v['b'][0]+oX, v['b'][1]+oY, white,
+      #   0
+      # )
+      # #left body
+      # @window.draw_triangle(
+      #   v['t'][0]+oX, v['t'][1]+oY, ship_grey,
+      #   v['l'][0]+oX, v['l'][1]+oY, ship_grey,
+      #   v['b'][0]+oX, v['b'][1]+oY, ship_grey,
+      #   0
+      # )
+      # #right body
+      # @window.draw_triangle(
+      #   v['t'][0]+oX, v['t'][1]+oY, ship_grey,
+      #   v['r'][0]+oX, v['r'][1]+oY, ship_grey,
+      #   v['b'][0]+oX, v['b'][1]+oY, ship_grey,
+      #   0
+      # )
+      # #center cockpit
+      # @window.draw_quad(
+      #   v['b'][0]-3+oX, v['b'][1]-6+oY, dark_grey,
+      #   v['b'][0]+3+oX, v['b'][1]-6+oY, dark_grey,
+      #   v['b'][0]+5+oX, v['b'][1]-2+oY, dark_grey,
+      #   v['b'][0]-5+oX, v['b'][1]-2+oY, dark_grey,
+      #   0
+      # )
     }
   end
 end
