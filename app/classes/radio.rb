@@ -94,13 +94,15 @@ class Radio
 
 
           ## STORY CODE
-          if @window.story_state == 4
-            @window.update_story
 
-          end
           ## END STORY CODE
 
           scaled_volume = (255*broadcast_volume).round
+
+          if @window.story_state == 4 && broadcast_volume > 0.5
+            @window.update_story
+
+          end
           @reception_color = ColorPicker.color('full_reception', scaled_volume)
           aIQ.visible_on_map = true
           aIQ.broadcast.volume = broadcast_volume

@@ -6,8 +6,8 @@ class Particle
     @origin = ship.particle_origin
     @x = ship.particle_origin[0]
     @y = ship.particle_origin[1]
-    @xvel = (rand(4)+1)-8
-    @yvel = rand(8)+1
+    @xvel = (rand(3.0)+1)-1.5
+    @yvel = rand(3)+1
     @size = rand(3)+1
     @cycles = 0
     @max_cycles = 1.0
@@ -18,9 +18,10 @@ class Particle
 
   def update_position(up = false)
     @x += @xvel
-    @xvel = @xvel*0.7
+    @xvel = @xvel*0.9
     @y += @yvel
-    @yvel = [@yvel*0.8, 0.1].max
+    # @yvel *= 0.8 if @yvel > 3
+    # @yvel = [@yvel*0.8, 0.1].max
     @cycles += 1
 
     ratio = @cycles/@max_cycles
@@ -39,17 +40,17 @@ class Particle
 
   def reset_particle(up)
     if (!@window.pause_for_story && up) || ([0,4].include?@window.game_state)
-      @y_scalar = 1.0
+      @y_scalar = @ship.current_engine_volume
     else
       @y_scalar = [@y_scalar*0.7, 0.2].max
     end
 
     @x = @origin[0]
     @y = @origin[1]
-    @xvel = ((rand(50)+1)/10.0-2.5) * y_scalar
-    @yvel = rand(2)+8 * y_scalar
+    @xvel = ((rand(30)+1)/10.0-1.5) * y_scalar
+    @yvel = rand(2)+2 * y_scalar
     @cycles = 0
-    @max_cycles = (rand(40)+1.0) * y_scalar
+    @max_cycles = (rand(80)+1.0) * y_scalar
     @angle = @ship.angle
 
   end

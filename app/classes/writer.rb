@@ -16,6 +16,8 @@ class Writer
     @y = HEIGHT - 20
     @trans = ColorPicker.color('writer_background')
     @repeat = false
+    @space_alert_timer = 120
+    @show_space_alert = true
   end
 
   def set_text=(text)
@@ -23,10 +25,10 @@ class Writer
     @scan = 0
     @timer = 10
     @text = text
-
   end
 
   def update
+
     @timer -=1
     if @timer <=0
       @scan += 1
@@ -39,7 +41,16 @@ class Writer
       else
         @timer = 2
       end
-
+    end
+    @space_alert_timer -=1
+    if @space_alert_timer <=0
+      @show_space_alert = !@show_space_alert
+      if @show_space_alert
+        @space_alert_timer = 60 
+      else
+        @space_alert_timer = 20
+      end
+      
     end
   end
 
@@ -53,6 +64,19 @@ class Writer
       0
     )
     @font.draw(@text[0, @scan], @x, @y+1, 0, 1, 1, ColorPicker.color('dark_grey'), :default)
+
+    if @window.pause_for_story
+      @window.draw_quad(
+        7/8.0*WIDTH, @y-20, t,
+        WIDTH, @y-20, t,
+        WIDTH, @y, t,
+        7/8.0*WIDTH, @y, t,
+        0
+      )
+      if @show_space_alert
+        @font.draw("*SPACE*", 7/8.0*WIDTH+10, @y-18, 0, 1, 1, ColorPicker.color('dark_grey'), :default)
+      end
+    end
   end
 
   def draw_title

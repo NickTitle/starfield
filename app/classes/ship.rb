@@ -119,8 +119,8 @@ class Ship
   def adjust_world_motion
     wM = @window.world_motion
     radAngle = @angle*Math::PI/180
-    @velocity[0] = [ [4, @velocity[0]+0.01*Math.sin(radAngle)].min, -4].max
-    @velocity[1] = [ [4, @velocity[1]-0.01*Math.cos(radAngle)].min, -4].max
+    @velocity[0] = [ [4, @velocity[0]+0.03*Math.sin(radAngle)].min, -4].max
+    @velocity[1] = [ [4, @velocity[1]-0.03*Math.cos(radAngle)].min, -4].max
   end
 
   def adjust_for_orbit
@@ -174,11 +174,15 @@ class Ship
 
       when "active"
         #enable cornering based on heading a nearly-cardinal direction
-        if (@angle.between?(340,359) || @angle.between?(0,10) || @angle.between?(170, 190))
-          @velocity[0] *= 0.985
-        elsif @angle.between?(260,280) || @angle.between?(80,100)
-          @velocity[1] *= 0.985
-        end
+        # if (@angle.between?(340,359) || @angle.between?(0,10) || @angle.between?(170, 190))
+        #   @velocity[0] *= 0.985
+        # elsif @angle.between?(260,280) || @angle.between?(80,100)
+        #   @velocity[1] *= 0.985
+        # end
+
+        @velocity[0] *= 0.993
+        @velocity[1] *= 0.993
+
 
       when "passive"
         # reduce speed of the world unless it's already really small
