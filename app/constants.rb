@@ -15,10 +15,11 @@ STORY = [
   ["Wait, this isn't just static! ( tune with ' . ' )", true],
   ["There must be someone out there...", true],
   ["...somewhere. (check the corner map if you get lost)", true],
+  ["(find towers by tuning the radio, then follow the sonar)", true],
   ["It's time to start looking. ( press arrow keys to fly! )" , false],
   ["Hmm; there's nobody here,", true],
-  ["... but there's more on the radio.", true],
-  ["If I shut this thing down, I'll hear more radio signals.", true],      #10
+  ["... but there's more on the radio.", true],               
+  ["If I shut this thing down, I'll hear more radio signals.", true],      
   ["( press SPACE )", true],
   ["It was nothing, just some old radio tower.", true],
   ["...but I know there's more of these.", true],
@@ -72,6 +73,6 @@ STORY = [
 ]
 #radio cues need to reference the state before the one that triggers radio
 # i.e. : if state is this, advance to next state which involves the radio
-RADIO_CUES = [7,14,19,22,26,30,33,37,42,48,54]
+RADIO_CUES = [8,15,20,23,27,31,34,38,43,49,55]
 #artifact cues reference the "press space action of each artifact"
-ARTIFACT_CUES = [11,17,21,24,28,32,36,40,45,51,56]
+ARTIFACT_CUES = [12,18,22,25,29,33,37,41,46,52,57]

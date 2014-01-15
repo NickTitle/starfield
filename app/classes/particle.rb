@@ -40,7 +40,11 @@ class Particle
 
   def reset_particle(up)
     if (!@window.pause_for_story && up) || ([0,4].include?@window.game_state)
-      @y_scalar = @ship.current_engine_volume
+      if @window.is_gameplay_state?
+        @y_scalar = @ship.current_engine_volume
+      else
+        @y_scalar = 1
+      end
     else
       @y_scalar = [@y_scalar*0.7, 0.2].max
     end

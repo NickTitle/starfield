@@ -153,6 +153,7 @@ class Radio
     draw_grill
     draw_frame
     draw_dial_base
+    draw_tune_lines
     draw_tuner
     draw_knobs
   end
@@ -257,6 +258,7 @@ class Radio
   def draw_dial_base
     c = ColorPicker.color('dark_grey')
     c1 = ColorPicker.color('white')
+    b = ColorPicker.color('black')
 
     x = 85
     y = HEIGHT - 60
@@ -271,6 +273,95 @@ class Radio
       on_off_color = ColorPicker.color('radio_grey')
     end
     draw_octagon(@window, x+2, y+2, size-4, on_off_color)
+  end
+
+  def draw_tune_lines
+    c = ColorPicker.color('dark_grey')
+    x = 85
+    y = HEIGHT - 60
+    size = 40
+
+    #1 (line)
+    @window.draw_quad(
+      x+5, y+size/2-2, c,
+      x+10, y+size/2-2, c,
+      x+10, y+size/2-1, c,
+      x+5, y+size/2-1, c,
+      0
+    )
+
+    #2
+    @window.draw_quad(
+      x+7, y+size/2-7, c,
+      x+8, y+size/2-7, c,
+      x+8, y+size/2-6, c,
+      x+7, y+size/2-6, c,
+      0
+    )
+
+    #3 (star)
+    @window.draw_quad(
+      x+size/4, y+size/4-1, c,
+      x+size/4+1, y+size/4-2, c,
+      x+size/4+2, y+size/4-1, c,
+      x+size/4+1, y+size/4, c,
+      0
+    )
+
+    #4
+    @window.draw_quad(
+      x+15, y+size/2-13, c,
+      x+16, y+size/2-13, c,
+      x+16, y+size/2-12, c,
+      x+15, y+size/2-12, c,
+      0
+    )
+
+    #5 (line)
+    @window.draw_quad(
+      x+size/2, y+4, c,
+      x+size/2, y+10, c,
+      x+size/2+1, y+10, c,
+      x+size/2+1, y+4, c,
+      0
+    )
+
+    #6
+    @window.draw_quad(
+      x+size-15, y+size/2-13, c,
+      x+size-16, y+size/2-13, c,
+      x+size-16, y+size/2-12, c,
+      x+size-15, y+size/2-12, c,
+      0
+    )
+
+    #7 (star)
+    @window.draw_quad(
+      x+size-(size/4), y+size/4-1, c,
+      x+size-(size/4+1), y+size/4-2, c,
+      x+size-(size/4+2), y+size/4-1, c,
+      x+size-(size/4+1), y+size/4, c,
+      0
+    )
+
+    #8
+    @window.draw_quad(
+      x+size-7, y+size/2-7, c,
+      x+size-8, y+size/2-7, c,
+      x+size-8, y+size/2-6, c,
+      x+size-7, y+size/2-6, c,
+      0
+    )
+
+    #9 (line)
+    @window.draw_quad(
+      x+size-5, y+size/2-2, c,
+      x+size-10, y+size/2-2, c,
+      x+size-10, y+size/2-1, c,
+      x+size-5, y+size/2-1, c,
+      0
+    )
+
   end
 
   def draw_tuner

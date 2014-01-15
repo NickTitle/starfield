@@ -45,7 +45,7 @@ class Ship
 
   #make the engine particles that fly behind the ship, and make particles for second ship too
   def create_particles
-    100.times do
+    200.times do
       @particle = Particle.new(@window, self)
       @particle_array.push(@particle)
     end
