@@ -1,0 +1,100 @@
+#wrapper {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  left: 0;
+  top: 0;
+  padding: none;
+  overflow: hidden;
+}
+
+#background {
+  position: absolute;
+  height:150%;
+  width: 150%;
+  left: -25%;
+  top: -25%;
+  background-position: center;
+  background-image: url('../img/SF_Background.jpg');
+  background-size: cover;
+  overflow: hidden;
+}
+
+#planet {
+  position: absolute;
+  height:47%;
+  width: 28%;
+  left: 5%;
+  top: 5%;
+  padding: none;
+  background-image: url('../img/SF_planet.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+#rightAsteroids {
+  position: absolute;
+  height: 60%;
+  width: 40%;
+  right: 12%;
+  top: 15%;
+  padding: none;
+  background-position: center;
+  background-image: url('../img/SF_Asteroids1.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+#topAsteroidCluster {
+  position: absolute;
+  height:80%;
+  width: 60%;
+  right: 5%;
+  top: -5%;
+  padding: none;
+  background-position: center;
+  background-image: url('../img/SF_Asteroids5.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+#frontLeftAsteroids {
+  position: absolute;
+  height:80%;
+  width: 75%;
+  left: -12%;
+  bottom: -30%;
+  padding: none;
+  background-position: center;
+  background-image: url('../img/SF_Asteroids2.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+#leftCenterAsteroids {
+  position: absolute;
+  height:35%;
+  width: 30%;
+  left: -10%;
+  top: 50%;
+  padding: none;
+  background-image: url('../img/SF_Asteroids3.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+#ship {
+  position: absolute;
+  height:15%;
+  width: 20%;
+  left: 50%;
+  top: 45%;
+  padding: none;
+  background-image: url('../img/SF_Ship.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+#body {
+  background-color: black;
+}
