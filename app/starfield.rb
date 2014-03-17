@@ -60,7 +60,8 @@ class GameWindow < Gosu::Window
     end
 
     ## custom debug flags
-    # @story_state = 57
+    @story_state = 58
+    @pause_for_story = true
     # @game_state = 4
     # @end_screen_transparency = 0
 
@@ -140,7 +141,7 @@ class GameWindow < Gosu::Window
 
   def update_for_game_state_change
     if @game_state == 0 && @end_screen_transparency > 0
-      @end_screen_transparency -= 0.5
+      @end_screen_transparency -= 1 #0.5
     elsif @game_state == 2 && @end_screen_transparency < 255
       @end_screen_transparency += 0.5
     elsif @game_state == 2 && @end_screen_transparency >= 255

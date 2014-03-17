@@ -60,7 +60,7 @@ class KeyEventHandler
         r.radio_offset -= 0.5 unless r.radio_offset < 0.5
 
         # special case to start ending the game
-        if @w.story_state == 59 && r.radio_offset == 0
+        if @w.story_state == 60 && r.radio_offset == 0
           @w.update_story
           @w.writer.set_text=""
         end

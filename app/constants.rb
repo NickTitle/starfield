@@ -2,7 +2,7 @@ WINDOW_WIDTH = 1200
 WINDOW_HEIGHT = 900
 WIDTH = 640
 HEIGHT = 480
-WORLD_SIZE = 25000.0
+WORLD_SIZE = 20000.0
 # WORLD_SIZE = 500
 # DEBUG = true
 DEBUG = false
@@ -68,7 +68,7 @@ STORY = [
   ["( press SPACE )", true],
   ["...", true],
   ["It wasn't you.", true],
-  ["( turn the radio off with ' , ' )", false],
+  ["( turn the radio off with ' , ' )", false],         #60
 
 ]
 #radio cues need to reference the state before the one that triggers radio
