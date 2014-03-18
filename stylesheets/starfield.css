@@ -47,10 +47,10 @@
 
 #topAsteroidCluster {
   position: absolute;
-  height:80%;
-  width: 60%;
-  right: 5%;
-  top: -5%;
+  height:120%;
+  width: 120%;
+  right: -25%;
+  bottom: -5%;
   padding: none;
   background-position: center;
   background-image: url('../img/SF_Asteroids5.png');
@@ -62,8 +62,8 @@
   position: absolute;
   height:80%;
   width: 75%;
-  left: -12%;
-  bottom: -30%;
+  left: 0;
+  bottom: -5%;
   padding: none;
   background-position: center;
   background-image: url('../img/SF_Asteroids2.png');
@@ -73,10 +73,10 @@
 
 #leftCenterAsteroids {
   position: absolute;
-  height:35%;
-  width: 30%;
-  left: -10%;
-  top: 50%;
+  height:50%;
+  width: 65%;
+  left: 5%;
+  top: 70%;
   padding: none;
   background-image: url('../img/SF_Asteroids3.png');
   background-size: contain;
@@ -85,8 +85,8 @@
 
 #ship {
   position: absolute;
-  height:15%;
-  width: 20%;
+  height:12%;
+  width: 15%;
   left: 50%;
   top: 45%;
   padding: none;

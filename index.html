@@ -20,11 +20,11 @@
     <div id="wrapper">
       <div id="background"></div>
       <div id="planet"></div>
-      <div id="topAsteroidCluster"></div>
       <div id="rightAsteroids"></div>
+      <div id="frontLeftAsteroids"></div>
       <div id="leftCenterAsteroids"></div>
       <div id="ship"></div>
-      <div id="frontLeftAsteroids"></div>
+      <div id="topAsteroidCluster"></div>
     </div>
 
     <script type="text/javascript">
@@ -52,19 +52,20 @@
 
       function updateObjects() {
         //right
-        ship.css({'margin-left':offset[0]/maxOffset[0]*(w/100), 'margin-top':offset[1]/maxOffset[1]*(h/100)});
-        background.css({'margin-left':offset[0]/maxOffset[0]*(w/300), 'margin-top':offset[1]/maxOffset[1]*(h/300)});
+        ship.css({'margin-left':offset[0]/maxOffset[0]*(w/30), 'margin-top':offset[1]/maxOffset[1]*(h/100)});
+        background.css({'margin-left':offset[0]/maxOffset[0]*(w/450), 'margin-top':offset[1]/maxOffset[1]*(h/450)});
 
         //left
-        planet.css({'margin-left':offset[0]/maxOffset[0]*(-w/150), 'margin-top':offset[1]/maxOffset[1]*(-h/150)});
+        planet.css({'margin-left':offset[0]/maxOffset[0]*(w/400), 'margin-top':offset[1]/maxOffset[1]*(-h/400)});
 
-        frontLeftAsteroids.css({'margin-left':offset[0]/maxOffset[0]*(-w/500), 'margin-bottom':offset[1]/maxOffset[1]*(-h/500)});
+        frontLeftAsteroids.css({'margin-left':offset[0]/maxOffset[0]*(w/200), 'margin-bottom':(offset[1]/maxOffset[1]*(-h/800) + offset[0]/maxOffset[0]*(w/100))});
 
-        rightAsteroids.css({'margin-right':offset[0]/maxOffset[0]*(-w/400), 'margin-bottom':offset[1]/maxOffset[1]*(-h/600)});
+        rightAsteroids.css({'margin-right':offset[0]/maxOffset[0]*(w/80), 'margin-top':(offset[1]/maxOffset[1]*(-h/600) + offset[0]/maxOffset[0]*(w/300))});
 
-        leftCenterAsteroids.css({'margin-left':offset[0]/maxOffset[0]*(-w/600), 'margin-top':offset[1]/maxOffset[1]*(-h/600)});
+        leftCenterAsteroids.css({'margin-left':offset[0]/maxOffset[0]*(-w/20), 'margin-top':offset[1]/maxOffset[1]*(-h/600) + offset[0]/maxOffset[0]*(-w/20)});
 
-        topAsteroidCluster.css({'margin-right':offset[0]/maxOffset[0]*(w/500),'margin-top':offset[1]/maxOffset[1]*(-h/600)});
+        //front front
+        topAsteroidCluster.css({'margin-right':offset[0]/maxOffset[0]*(w/20),'margin-top':(offset[1]/maxOffset[1]*(-h/600))});
 
       }
     
