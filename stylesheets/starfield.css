@@ -47,10 +47,10 @@
 
 #topAsteroidCluster {
   position: absolute;
-  height:120%;
-  width: 120%;
+  height:80%;
+  width: 100%;
   right: -25%;
-  bottom: -5%;
+  bottom: 0;
   padding: none;
   background-position: center;
   background-image: url('../img/SF_Asteroids5.png');
