@@ -25,6 +25,7 @@
       <div id="leftCenterAsteroids"></div>
       <div id="ship"></div>
       <div id="topAsteroidCluster"></div>
+      <div id="logo"></div>
     </div>
 
     <script type="text/javascript">
@@ -37,6 +38,7 @@
           leftCenterAsteroids = $('#leftCenterAsteroids'),
           topAsteroidCluster = $('#topAsteroidCluster'),
           rightAsteroids = $('#rightAsteroids'),
+          logo = $('#logo'),
           w = $(document).width(),
           h = $(document).height(),
           offset = [0,0];
@@ -66,6 +68,9 @@
 
         //front front
         topAsteroidCluster.css({'margin-right':offset[0]/maxOffset[0]*(w/20),'margin-top':(offset[1]/maxOffset[1]*(-h/600))});
+
+        logo.css({'margin-left':offset[0]/maxOffset[0]*(w/500),'margin-top':(offset[1]/maxOffset[1]*(-h/600))});
+
 
       }
     

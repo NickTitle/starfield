@@ -88,9 +88,21 @@
   height:12%;
   width: 15%;
   left: 50%;
-  top: 45%;
+  top: 50%;
   padding: none;
   background-image: url('../img/SF_Ship.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+#logo {
+  position: absolute;
+  height:30%;
+  width: 80%;
+  left: 10%;
+  top: 45%;
+  padding: none;
+  background-image: url('../img/SF_Title.png');
   background-size: contain;
   background-repeat: no-repeat;
 }
