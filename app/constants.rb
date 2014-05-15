@@ -55,7 +55,7 @@ STORY = [
   ["I've checked this radio so many times now...", true],
   ["I know there's only a few more of these left.", true],
   ["( press SPACE )", true],
-  ["Should just turn this radio off?", true],
+  ["Should I just turn this radio off?", true],
   ["Well...", true],
   ["...have you ever given up on me?", false],
   ["You're not here, but you're somewhere.", true],
