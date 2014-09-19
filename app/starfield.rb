@@ -60,8 +60,8 @@ class GameWindow < Gosu::Window
     end
 
     ## custom debug flags
-    @story_state = 58
-    @pause_for_story = true
+    # @story_state = 58
+    # @pause_for_story = true
     # @game_state = 4
     # @end_screen_transparency = 0
 
