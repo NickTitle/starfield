@@ -5,7 +5,7 @@ Starfield is a story about your space ship, a radio, anda search for something y
 
 The game and music are by me! I hope you enjoy them both.
 
-Soundtrack is here: http://www.nicktitle.bandcamp.com
+Soundtrack is [available for free here](https://nicktitle.bandcamp.com/album/starfield-soundtrack-wip)
 
 You can install it as follows:
 
